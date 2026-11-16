@@ -4,7 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101713"><meta name="description" content="بروتوكول الظلال — عالم مفتوح حي للبقاء والاستكشاف وبناء الحضارات.">
 <title>بروتوكول الظلال — العصر الأول</title>
-<link rel="stylesheet" href="/SHADOW-PROTOCOL/src/style.css?v=5">
+<link rel="stylesheet" href="/SHADOW-PROTOCOL/src/style.css?v=6">
 
 </head>
 <body>
@@ -34,6 +34,13 @@
 <div class="toast" id="toast"></div><div class="crosshair" id="crosshair">+</div>
 <div class="loading-screen" id="loading"><div class="loader-mark">ب ظ</div><span>الأرض تستيقظ</span><small>يجري إنشاء البرية الأولى</small></div>
 </div>
-<script type="module" src="/SHADOW-PROTOCOL/src/main.js?v=5"></script>
-<script>window.addEventListener("error",function(e){var t=document.getElementById("loading");if(t){t.classList.remove("hidden");t.innerHTML="<b style=\"font:22px Cinzel,serif;color:#d7b979\">بروتوكول الظلال</b><span style=\"color:#eee\">تعذر تشغيل عالم اللعبة</span><small style=\"color:#bbb\">أعد تحميل الصفحة وحاول مرة أخرى.</small>";}});</script>
+<script type="module" src="/SHADOW-PROTOCOL/src/main.js?v=6"></script>
+<script>
+function showGameError(message){
+ var t=document.getElementById("loading");
+ if(t){t.classList.remove("hidden");t.innerHTML='<b style="font:22px Cinzel,serif;color:#d7b979">بروتوكول الظلال</b><span style="color:#eee">تعذر تشغيل عالم اللعبة</span><small style="color:#bbb">'+(message||'أعد تحميل الصفحة وحاول مرة أخرى.')+'</small>';}
+}
+window.addEventListener("error",function(e){showGameError(e.message||'تحقق من اتصال الإنترنت وإمكانية تشغيل الرسوم ثلاثية الأبعاد.');});
+window.addEventListener("unhandledrejection",function(e){showGameError(e.reason&&e.reason.message?e.reason.message:'حدث خطأ أثناء تهيئة اللعبة.');});
+</script>
 </body></html>
