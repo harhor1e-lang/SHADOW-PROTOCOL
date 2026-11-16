@@ -42,7 +42,7 @@ if(weatherTick>85){weatherTick=0;const weathers=['صحو','ضباب','مطر خ�
 for(const v of villagers){v.mesh.position.x=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3;v.mesh.position.z=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z)}
 }
 
-addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key.toLowerCase()==='i')openPanel('inventory');if(e.key.toLowerCase()==='m')openPanel('map');if(e.key.toLowerCase()==='j')openPanel('journal');if(e.key.toLowerCase()==='f')interact()});
+addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key.toLowerCase()==='f')interact()});
 addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 canvas.addEventListener('pointerdown',e=>{drag=true;last={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointerup',()=>drag=false);canvas.addEventListener('pointercancel',()=>drag=false);
 canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-last.x)*.0045;pitch=THREE.MathUtils.clamp(pitch+(e.clientY-last.y)*.003,-.15,1.12);last={x:e.clientX,y:e.clientY}});
