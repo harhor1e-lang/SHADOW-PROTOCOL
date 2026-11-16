@@ -4,11 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#101820" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="وتين ستي" />
+  <link rel="manifest" href="/SHADOW-PROTOCOL/manifest.webmanifest" />
+  <link rel="icon" href="/SHADOW-PROTOCOL/icons/icon.svg" type="image/svg+xml" />
   <meta name="description" content="وتين ستي: عالم مفتوح ثلاثي الأبعاد للهاتف، باللغة العربية" />
   <title>وتين ستي | عالم مفتوح عربي</title>
 </head>
 <body>
   <div id="app">
+    <div id="rotateNotice" class="rotate-notice"><div class="rotate-icon">↻</div><strong>وتين ستي تُلعب بالوضع الأفقي</strong><span>يرجى تدوير الهاتف أفقياً للاستمتاع بالعالم والتحكم بشكل كامل.</span></div>
     <div id="game"></div>
     <section class="intro-screen" id="introScreen" aria-label="مقدمة وتين ستي">
       <div class="intro-glow"></div><div class="intro-content">
@@ -17,6 +24,7 @@
         <p class="intro-description">مدينة تنبض بالحياة، شوارع ومغامرات ومهن وأصدقاء وملاهي تنتظرك لاكتشافها.</p>
         <div class="intro-tags"><span>استكشف</span><span>قد سيارتك</span><span>اصنع قصتك</span></div>
         <button id="startGameBtn" class="start-game">ابدأ المغامرة <span>←</span></button>
+        <button id="installAppBtn" class="install-app" hidden>تثبيت التطبيق على الهاتف</button>
         <small class="age-note">تصنيف مقترح: +١٨ • شخصيات بالغة وموضوعات ناضجة</small>
       </div>
       <div class="intro-footer">WATEEN CITY <span>نسخة تجريبية قيد التطوير</span></div>
