@@ -38,6 +38,9 @@ function drawCompatibilityCity(error) {
 try {
 
 const mount=document.querySelector('#game');
+const introButton=document.querySelector('#startGameBtn');
+if(introButton) introButton.addEventListener('click',()=>document.querySelector('#introScreen')?.classList.add('closed'));
+
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x9bc2d0);
 scene.fog=new THREE.Fog(0x9bc2d0,90,420);
@@ -68,12 +71,63 @@ let seed=7841;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/429
 for(let x=-5;x<=5;x++)for(let z=-5;z<=5;z++){if(Math.abs(x)%1===0&&Math.abs(z)%1===0){const cx=x*70+(rand()-.5)*24,cz=z*70+(rand()-.5)*24;if(Math.abs(cx)<28||Math.abs(cz)<28)continue;const w=18+rand()*17,d=18+rand()*17,h=10+rand()*43;building(cx,cz,w,d,h,Math.floor(rand()*buildingMaterials.length))}}
 function tree(x,z){const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.25,.38,3,7),mat(0x72513a));trunk.position.set(x,1.5,z);trunk.castShadow=true;scene.add(trunk);const crown=new THREE.Mesh(new THREE.SphereGeometry(2.2,7,6),mat(0x426c43));crown.position.set(x,4,z);crown.castShadow=true;scene.add(crown)}
 for(let i=0;i<180;i++){const x=(rand()-.5)*560,z=(rand()-.5)*560;if(Math.abs(x%70)<11||Math.abs(z%70)<11)continue;tree(x,z)}
+
+/* Wateen amusement district: plaza, ferris wheel, carousel and coaster */
+const parkFloor=new THREE.Mesh(new THREE.PlaneGeometry(112,92),mat(0x9b927b));parkFloor.rotation.x=-Math.PI/2;parkFloor.position.set(132,.025,-132);parkFloor.receiveShadow=true;scene.add(parkFloor);
+const parkTrim=mat(0x463f38),rideGold=mat(0xe2ad4f,.45),rideRed=mat(0xb94d3d,.48),rideBlue=mat(0x4b91a7,.42);
+function cylinderBetween(a,b,r,material){const dir=new THREE.Vector3().subVectors(b,a);const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,dir.length(),10),material);mesh.position.copy(a).add(b).multiplyScalar(.5);mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());mesh.castShadow=true;scene.add(mesh);return mesh}
+const wheelCenter=new THREE.Vector3(145,22,-145),wheelRadius=15;
+const wheelRing=new THREE.Mesh(new THREE.TorusGeometry(wheelRadius,.48,10,64),rideGold);wheelRing.position.copy(wheelCenter);scene.add(wheelRing);
+for(let i=0;i<12;i++){const a=i*Math.PI/6;const end=new THREE.Vector3(wheelCenter.x+Math.cos(a)*wheelRadius,wheelCenter.y+Math.sin(a)*wheelRadius,wheelCenter.z);cylinderBetween(wheelCenter,end,.16,rideGold);const cabin=new THREE.Group();const box=new THREE.Mesh(new THREE.BoxGeometry(2.4,2,2),[rideRed,rideBlue,rideGold][i%3]);box.position.y=-1; cabin.add(box);const roof=new THREE.Mesh(new THREE.BoxGeometry(2.7,.22,2.2),parkTrim);roof.position.y=.1;cabin.add(roof);cabin.position.set(end.x,end.y-1,end.z);scene.add(cabin)}
+cylinderBetween(new THREE.Vector3(145,1,-145),new THREE.Vector3(137,22,-145),.55,parkTrim);
+cylinderBetween(new THREE.Vector3(145,1,-145),new THREE.Vector3(153,22,-145),.55,parkTrim);
+const coasterPath=new THREE.CatmullRomCurve3([new THREE.Vector3(95,5,-115),new THREE.Vector3(108,16,-122),new THREE.Vector3(122,7,-112),new THREE.Vector3(136,19,-126),new THREE.Vector3(151,6,-112),new THREE.Vector3(165,13,-126),new THREE.Vector3(178,5,-116)]);
+const coasterRail=new THREE.Mesh(new THREE.TubeGeometry(coasterPath,100,.34,8,false),rideRed);scene.add(coasterRail);
+for(let i=0;i<=28;i+=2){const p=coasterPath.getPoint(i/28);cylinderBetween(new THREE.Vector3(p.x,.3,p.z),p,.13,parkTrim)}
+const coasterCar=new THREE.Mesh(new THREE.BoxGeometry(4,1.3,2.2),rideBlue);coasterCar.position.set(108,16,-122);scene.add(coasterCar);
+const carouselBase=new THREE.Mesh(new THREE.CylinderGeometry(9,9,.7,32),rideGold);carouselBase.position.set(105,.55,-158);scene.add(carouselBase);
+const carouselRoof=new THREE.Mesh(new THREE.ConeGeometry(10,4,32),rideRed);carouselRoof.position.set(105,6,-158);scene.add(carouselRoof);
+const carouselPole=new THREE.Mesh(new THREE.CylinderGeometry(.5,.7,7,16),rideGold);carouselPole.position.set(105,3.5,-158);scene.add(carouselPole);
+for(let i=0;i<10;i++){const a=i*Math.PI/5;const x=105+Math.cos(a)*7.2,z=-158+Math.sin(a)*7.2;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,5,8),rideGold);pole.position.set(x,3,z);scene.add(pole);const horse=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.9,3,7),rideBlue);horse.position.set(x,1.7,z);scene.add(horse)}
+const parkSign=new THREE.Mesh(new THREE.BoxGeometry(24,3,.7),mat(0x263d50));parkSign.position.set(132,8,-180);scene.add(parkSign);
+/* Adult visitor character with facial features and natural proportions */
+const visitor=new THREE.Group();scene.add(visitor);visitor.position.set(121,0,-105);
+const vSkin=mat(0xc88f70),vHair=mat(0x30221f),vDress=mat(0x6e4267),vDark=mat(0x28242b);
+const vBody=new THREE.Mesh(new THREE.CapsuleGeometry(.42,.72,5,10),vDress);vBody.position.y=1.48;visitor.add(vBody);
+const vWaist=new THREE.Mesh(new THREE.CylinderGeometry(.29,.42,.42,12),vDress);vWaist.position.y=1.03;visitor.add(vWaist);
+const vHips=new THREE.Mesh(new THREE.SphereGeometry(.43,12,10),vDress);vHips.scale.set(1,.7,.72);vHips.position.set(0,.82,0);visitor.add(vHips);
+for(const x of [-.2,.2]){const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.72,4,8),vSkin);leg.position.set(x,.35,0);visitor.add(leg);const boot=new THREE.Mesh(new THREE.BoxGeometry(.25,.16,.38),vDark);boot.position.set(x,.08,.08);visitor.add(boot)}
+for(const x of [-.52,.52]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.58,4,8),vSkin);arm.position.set(x,1.48,0);arm.rotation.z=x*.32;visitor.add(arm)}
+const vHead=new THREE.Mesh(new THREE.SphereGeometry(.3,12,10),vSkin);vHead.position.y=2.35;visitor.add(vHead);
+const vHairCap=new THREE.Mesh(new THREE.SphereGeometry(.315,12,10),vHair);vHairCap.position.set(0,2.43,-.035);visitor.add(vHairCap);
+const vHairBack=new THREE.Mesh(new THREE.CapsuleGeometry(.2,.85,5,8),vHair);vHairBack.position.set(0,1.95,-.23);visitor.add(vHairBack);
+for(const x of [-.105,.105]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.043,8,8),mat(0xf4eee4));eye.position.set(x,2.38,.275);visitor.add(eye);const pupil=new THREE.Mesh(new THREE.SphereGeometry(.022,8,8),mat(0x38251f));pupil.position.set(x,2.38,.31);visitor.add(pupil);const brow=new THREE.Mesh(new THREE.BoxGeometry(.09,.02,.025),vHair);brow.position.set(x,2.46,.28);visitor.add(brow)}
+const vNose=new THREE.Mesh(new THREE.SphereGeometry(.045,8,8),vSkin);vNose.position.set(0,2.3,.31);visitor.add(vNose);
+const vMouth=new THREE.Mesh(new THREE.BoxGeometry(.09,.018,.02),mat(0x8d514d));vMouth.position.set(0,2.21,.29);visitor.add(vMouth);
+
 // Decorative waterfront and marina edge
 const water=new THREE.Mesh(new THREE.PlaneGeometry(600,75),new THREE.MeshStandardMaterial({color:0x3c91a5,roughness:.25,metalness:.12}));water.rotation.x=-Math.PI/2;water.position.set(0,-.04,-270);scene.add(water);
 const player=new THREE.Group();scene.add(player);
 const skin=mat(0xb98260),shirt=mat(0x263d50),pants=mat(0x20252b),shoe=mat(0x17191b);
 const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.8,4,8),shirt);torso.position.y=1.48;torso.castShadow=true;player.add(torso);
 const head=new THREE.Mesh(new THREE.SphereGeometry(.32,12,10),skin);head.position.y=2.35;head.castShadow=true;player.add(head);
+function faceDetails(group,scale=1){
+  const eyeWhite=new THREE.MeshStandardMaterial({color:0xf4eee4,roughness:.35});
+  const iris=new THREE.MeshStandardMaterial({color:0x49372b,roughness:.3});
+  const dark=new THREE.MeshStandardMaterial({color:0x211b19,roughness:.8});
+  const lip=new THREE.MeshStandardMaterial({color:0x754b45,roughness:.65});
+  for(const x of [-.115,.115]){
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.052*scale,10,8),eyeWhite);eye.position.set(x*scale,2.39*scale,.286*scale);group.add(eye);
+    const pupil=new THREE.Mesh(new THREE.SphereGeometry(.027*scale,8,8),iris);pupil.position.set(x*scale,2.39*scale,.33*scale);group.add(pupil);
+    const brow=new THREE.Mesh(new THREE.BoxGeometry(.105*scale,.025*scale,.035*scale),dark);brow.position.set(x*scale,2.48*scale,.29*scale);group.add(brow);
+    const ear=new THREE.Mesh(new THREE.SphereGeometry(.07*scale,8,8),skin);ear.position.set(x*2.7*scale,2.34*scale,0);group.add(ear);
+  }
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.055*scale,8,8),skin);nose.scale.set(.72,1.25,.8);nose.position.set(0,2.31*scale,.32*scale);group.add(nose);
+  const mouth=new THREE.Mesh(new THREE.BoxGeometry(.105*scale,.022*scale,.018*scale),lip);mouth.position.set(0,2.22*scale,.298*scale);group.add(mouth);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.335*scale,12,10,0,Math.PI*2,0,Math.PI*.58),dark);hair.position.set(0,2.43*scale,-.015*scale);group.add(hair);
+}
+faceDetails(player);
+
 for(const x of [-.23,.23]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.27,.8,.3),pants);leg.position.set(x,.55,0);player.add(leg);const foot=new THREE.Mesh(new THREE.BoxGeometry(.3,.18,.48),shoe);foot.position.set(x,.14,.08);player.add(foot)}
 for(const x of [-.58,.58]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.16,.62,3,7),skin);arm.position.set(x,1.52,0);arm.rotation.z=x*.35;player.add(arm)}
 player.position.set(0,0,18);
