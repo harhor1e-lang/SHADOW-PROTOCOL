@@ -29,9 +29,10 @@ function detailedFace(parent,skinColor,hairColor,eyeColor=0x65432f,beard=false){
  const upper=new THREE.Mesh(new THREE.SphereGeometry(.045,16,10),lip);upper.scale.set(1,.28,.42);upper.position.set(0,-.177,.238);group.add(upper);
  const lower=new THREE.Mesh(new THREE.SphereGeometry(.04,16,10),lip);lower.scale.set(.9,.24,.4);lower.position.set(0,-.199,.24);group.add(lower);
  const chin=new THREE.Mesh(new THREE.SphereGeometry(.073,16,12),skin);chin.scale.set(.9,.58,.5);chin.position.set(0,-.235,.17);group.add(chin);
- const cap=new THREE.Mesh(new THREE.SphereGeometry(.258,24,16,0,Math.PI*2,0,Math.PI*.43),hair);cap.position.set(0,.075,-.012);group.add(cap);
- const fringe=new THREE.Mesh(new THREE.SphereGeometry(.12,16,10,0,Math.PI,0,Math.PI*.5),hair);fringe.scale.set(1.3,.55,.65);fringe.position.set(0,.115,.17);group.add(fringe);
- if(beard){const beardMesh=new THREE.Mesh(new THREE.SphereGeometry(.17,20,14,0,Math.PI*2,Math.PI*.38,Math.PI*.58),hair);beardMesh.scale.set(1,.85,.8);beardMesh.position.set(0,-.18,.08);group.add(beardMesh)}
+ const cap=new THREE.Mesh(new THREE.SphereGeometry(.258,32,22,0,Math.PI*2,0,Math.PI*.48),hair);cap.position.set(0,.075,-.012);group.add(cap);
+ const fringe=new THREE.Mesh(new THREE.SphereGeometry(.145,24,16,0,Math.PI,0,Math.PI*.56),hair);fringe.scale.set(1.35,.62,.72);fringe.position.set(0,.105,.165);group.add(fringe);
+ for(const side of [-1,1]){const lock=new THREE.Mesh(new THREE.CapsuleGeometry(.035,.105,4,8),hair);lock.position.set(side*.205,.005,.115);lock.rotation.z=side*.22;group.add(lock)}
+ if(beard){const beardMesh=new THREE.Mesh(new THREE.SphereGeometry(.17,24,18,0,Math.PI*2,Math.PI*.32,Math.PI*.66),hair);beardMesh.scale.set(1,.9,.86);beardMesh.position.set(0,-.18,.095);group.add(beardMesh);for(const side of [-1,1]){const moustache=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),hair);moustache.scale.set(1,.42,.6);moustache.position.set(side*.065,-.145,.245);moustache.rotation.z=side*-.12;group.add(moustache)}}
  group.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  return group;
 }
@@ -70,6 +71,7 @@ function moveWithCollision(obj,dx,dz,r=.48){
  obj.position.x=x;obj.position.z=z;
  return {x,z,moved:Math.abs(x-obj.position.x)+Math.abs(z-obj.position.z)>0};
 }
+const houseInstances=[],sleepingBeds=[];
 function house(x,z,s=1){
  const g=new THREE.Group(),wallMat=mat(0xb69a6d),roofMat=mat(0x49382b),doorMat=mat(0x3d2a20),windowMat=mat(0x8bb1ad,.3);
  const addWall=(w,h,d,px,py,pz)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallMat);m.position.set(px,py,pz);m.castShadow=true;m.receiveShadow=true;g.add(m)};
@@ -77,11 +79,21 @@ function house(x,z,s=1){
  addWall(7.2,3.5,.28,0,1.75,-3);addWall(.28,3.5,6, -3.6,1.75,0);addWall(.28,3.5,6,3.6,1.75,0);
  addWall(2.55,3.5,.28,-2.325,1.75,3);addWall(2.55,3.5,.28,2.325,1.75,3);
  const lintel=new THREE.Mesh(new THREE.BoxGeometry(2.1,.45,.3),wallMat);lintel.position.set(0,3.28,3);g.add(lintel);
+ const floor=new THREE.Mesh(new THREE.BoxGeometry(7.05,.18,5.85),mat(0x806044));floor.position.set(0,.12,0);floor.receiveShadow=true;g.add(floor);
  const roof=new THREE.Mesh(new THREE.ConeGeometry(5.25,2.9,4),roofMat);roof.position.y=4.65;roof.rotation.y=Math.PI/4;roof.scale.z=.84;roof.castShadow=true;g.add(roof);
- const door=new THREE.Mesh(new THREE.BoxGeometry(1.75,2.5,.16),doorMat);door.position.set(0,1.25,3.05);g.add(door);
+ const hinge=new THREE.Group();hinge.position.set(-.86,.08,3.05);hinge.rotation.y=-.92;const door=new THREE.Mesh(new THREE.BoxGeometry(1.72,2.5,.14),doorMat);door.position.set(.82,1.17,0);hinge.add(door);g.add(hinge);
+ const bed=new THREE.Group();bed.position.set(-1.55,.18,-1.05);
+ const frame=new THREE.Mesh(new THREE.BoxGeometry(1.48,.28,2.18),mat(0x654329));frame.position.y=.2;bed.add(frame);
+ const mattress=new THREE.Mesh(new THREE.BoxGeometry(1.34,.2,2.02),mat(0xd8cdb6));mattress.position.y=.43;bed.add(mattress);
+ const blanket=new THREE.Mesh(new THREE.BoxGeometry(1.36,.12,1.18),mat(0x687b70));blanket.position.set(0,.57,.38);bed.add(blanket);
+ const pillow=new THREE.Mesh(new THREE.BoxGeometry(.92,.14,.42),mat(0xe9dfcb));pillow.position.set(0,.58,-.67);bed.add(pillow);
+ for(const bx of [-.58,.58])for(const bz of [-.88,.88]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.13,.38,.13),doorMat);leg.position.set(bx,.02,bz);bed.add(leg)}
+ const headboard=new THREE.Mesh(new THREE.BoxGeometry(1.5,.82,.13),mat(0x654329));headboard.position.set(0,.48,-1.05);bed.add(headboard);
+ bed.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});g.add(bed);
  for(const side of [-1,1]){const win=new THREE.Mesh(new THREE.BoxGeometry(.78,.82,.09),windowMat);win.position.set(side*2.25,2,3.17);g.add(win);const cross=new THREE.Mesh(new THREE.BoxGeometry(.08,.9,.1),doorMat);cross.position.copy(win.position);g.add(cross)}
  const porch=new THREE.Mesh(new THREE.BoxGeometry(2.8,.18,1.1),mat(0x80603d));porch.position.set(0,.12,3.5);g.add(porch);
  g.position.set(x,height(x,z),z);g.scale.setScalar(s);scene.add(g);
+ const bedWorld=new THREE.Vector3(x-1.55*s,height(x,z)+.18*s,z-1.05*s);sleepingBeds.push({mesh:bed,house:g,roof,x,z,scale:s,world:bedWorld});houseInstances.push({mesh:g,roof,x,z,scale:s});
  const t=3.6*s,d=3*s,r=.46;
  addCollider(x,z-3*s,3.6*s,.14*s,r);addCollider(x-3.6*s,z,.14*s,3*s,r);addCollider(x+3.6*s,z,.14*s,3*s,r);
  addCollider(x-2.325*s,z+3*s,1.275*s,.14*s,r);addCollider(x+2.325*s,z+3*s,1.275*s,.14*s,r);
@@ -128,7 +140,17 @@ function createRegionSettlements(){
  for(let i=0;i<12;i++){const x=390+(i%4)*7,z=390+Math.floor(i/4)*8;const pillar=new THREE.Mesh(new THREE.BoxGeometry(1.1,2.5+(i%3),1.1),mat(0x777365));pillar.position.set(x,height(x,z)+1.2,z);pillar.rotation.z=(i%2)*.12;scene.add(pillar);addCollider(x,z,.65,.65,.15)}
 }
 createRegionSettlements();
-
+const regionGates=[];
+function regionGate(x,z,name,color){
+ const gate=new THREE.Group(),stone=mat(0x77766b),glowMat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.72});
+ for(const side of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.85,4.8,.9),stone);post.position.set(side*2,2.4,0);gate.add(post)}
+ const lintel=new THREE.Mesh(new THREE.BoxGeometry(5.1,.9,1),stone);lintel.position.y=4.75;gate.add(lintel);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(1.65,.09,10,48),glowMat);ring.position.set(0,2.45,.08);gate.add(ring);
+ const marker=new THREE.Mesh(new THREE.OctahedronGeometry(.42,1),glowMat);marker.position.set(0,5.55,0);gate.add(marker);
+ gate.position.set(x,height(x,z),z);gate.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(gate);regionGates.push({mesh:gate,x,z,name});
+}
+regionGate(-360,-282,'مرتفعات الصقيع',0x9bd9ef);regionGate(350,-352,'سهول الرماد',0xd69a62);regionGate(-420,338,'مستنقعات الضباب',0x82bca8);
+const weatherParticles=(()=>{const count=420,positions=new Float32Array(count*3);for(let i=0;i<count;i++){positions[i*3]=(Math.random()-.5)*70;positions[i*3+1]=Math.random()*34;positions[i*3+2]=(Math.random()-.5)*70}const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));const points=new THREE.Points(geo,new THREE.PointsMaterial({color:0xe7f3f7,size:.11,transparent:true,opacity:.8,depthWrite:false}));points.visible=false;scene.add(points);return{points,geo,count}})();
 const path=new THREE.Mesh(new THREE.PlaneGeometry(5,52),mat(0x988363));path.rotation.x=-Math.PI/2;path.position.set(10,2.25,-15);scene.add(path);
 // watchfire, wood stack and lantern
 const fire=new THREE.Group();fire.position.set(1,height(1,16)+.2,16);scene.add(fire);
@@ -219,11 +241,18 @@ function animal(x,z,kind){
 for(let i=0;i<5;i++){const a=i/5*Math.PI*2;animal(Math.cos(a)*30+18,Math.sin(a)*28-12,'غزال');}
 for(let i=0;i<7;i++){const a=Math.random()*Math.PI*2,r=12+Math.random()*30;animal(Math.cos(a)*r+10,Math.sin(a)*r+4,'أرنب');}
 
-let survivalTick=0,weatherTick=0;
+let survivalTick=0,weatherTick=0,currentWeather='مشمس',weatherKind='clear';
+function localRegion(x,z){if(Math.hypot(x+360,z+260)<210)return'مرتفعات الصقيع';if(Math.hypot(x-350,z+330)<210)return'سهول الرماد';if(Math.hypot(x+420,z-360)<210)return'مستنقعات الضباب';return'وادي السنديان'}
+function setWeather(kind){
+ weatherKind=kind;const names={clear:'مشمس',cloud:'غائم',fog:'ضباب',rain:'ممطر',snow:'مثلج',dust:'عاصفة ترابية'};currentWeather=names[kind]||'صحو';$('#weather-label').textContent=currentWeather;
+ weatherParticles.points.visible=kind==='snow'||kind==='rain';const pm=weatherParticles.points.material;pm.color.set(kind==='snow'?0xeaf7ff:0x9fcbd5);pm.size=kind==='snow'?.12:.07;pm.opacity=kind==='snow'?.9:.48;
+ const palette={snow:[0xb9cbd0,.012],fog:[0x879b98,.024],rain:[0x536c75,.018],dust:[0xb68b60,.016],cloud:[0x899b9a,.012],clear:[0x9bb6b0,.009]};const v=palette[kind]||palette.clear;scene.fog.color.set(v[0]);scene.fog.density=v[1];scene.background.set(v[0]);
+}
+function sleepUntilMorning(){const before=clockMinutes;clockMinutes=390;if(clockMinutes<=before)day++;game.stamina=100;game.health=Math.min(100,game.health+22);game.hunger=Math.max(0,game.hunger-8);game.thirst=Math.max(0,game.thirst-10);saveGame();toast('نمت حتى الصباح واستعدت قواك.');$('#side-panel').classList.remove('open')}
 function updateSurvival(dt,hour){
 if(!entered)return;survivalTick+=dt;weatherTick+=dt;
 if(survivalTick>18){survivalTick=0;game.hunger=Math.max(0,game.hunger-.8);game.thirst=Math.max(0,game.thirst-1.2);game.stamina=Math.min(100,game.stamina+2);if(game.hunger===0||game.thirst===0)game.health=Math.max(1,game.health-2);$('#health-bar').style.width=game.health+'%';$('#stamina-bar').style.width=game.stamina+'%';$('#hunger-bar').style.width=game.hunger+'%';$('#thirst-bar').style.width=game.thirst+'%';saveGame()}
-if(weatherTick>85){weatherTick=0;const weathers=['صحو','ضباب','مطر خفيف','عاصفة'];const w=weathers[Math.floor(Math.random()*weathers.length)];$('#weather-label').textContent=w;toast('تغير الطقس: '+w)}
+if(weatherTick>105){weatherTick=0;const r=localRegion(target.x,target.z);const choices=r==='مرتفعات الصقيع'?['snow','snow','cloud','fog']:r==='سهول الرماد'?['clear','dust','cloud','clear']:r==='مستنقعات الضباب'?['fog','rain','fog','cloud']:['clear','cloud','fog','rain'];setWeather(choices[Math.floor(Math.random()*choices.length)]);toast('تغير الطقس في '+r+': '+currentWeather)}
 for(const v of villagers){const oldX=v.mesh.position.x,oldZ=v.mesh.position.z;const nx=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3,nz=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;moveWithCollision(v.mesh,nx-oldX,nz-oldZ,.48);v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z);const moving=Math.hypot(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)>.001;const step=Math.sin(elapsed*3.8+v.phase)*(moving?.28:.035);v.armPivots[0].rotation.x=step;v.armPivots[1].rotation.x=-step;v.legPivots[0].rotation.x=-step*.8;v.legPivots[1].rotation.x=step*.8;v.mesh.rotation.y=Math.atan2(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)}
 for(const a of wildlife){const dx=a.mesh.position.x-target.x,dz=a.mesh.position.z-target.z,dist=Math.hypot(dx,dz);let vx=0,vz=0;if(entered&&dist<10){a.flee=Math.max(a.flee,2.8);vx=dx/(dist||1);vz=dz/(dist||1)}else{const wander=Math.sin(elapsed*a.speed+a.phase);vx=Math.cos(elapsed*a.speed*.7+a.phase)*.42;vz=Math.sin(elapsed*a.speed+a.phase)*.32;a.flee=Math.max(0,a.flee-dt)}const pace=a.flee>0?5.2:1.1;const ax=vx*pace*dt+(a.flee<=0?(a.homeX-a.mesh.position.x)*dt*.12:0),az=vz*pace*dt+(a.flee<=0?(a.homeZ-a.mesh.position.z)*dt*.12:0);moveWithCollision(a.mesh,ax,az,a.kind==='غزال'?.55:.3);a.mesh.position.x=THREE.MathUtils.clamp(a.mesh.position.x,-790,790);a.mesh.position.z=THREE.MathUtils.clamp(a.mesh.position.z,-790,790);a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);if(Math.abs(vx)+Math.abs(vz)>.05)a.mesh.rotation.y=Math.atan2(vx,vz);a.head.rotation.x=a.flee>0?-.12:Math.sin(elapsed*1.4+a.phase)*.08;a.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(elapsed*(a.flee>0?11:4)+a.phase+(i%2)*Math.PI)* (a.flee>0?.72:.18)});}
 }
@@ -249,7 +278,7 @@ function openPanel(which){
 let title='',kicker='سجل العالم',body='';
 if(which==='library'){kicker='مركز العالم';title='المكتبة';body='<p>كل أنظمة اللعبة وأدواتها في مكان واحد.</p>'+panelButton('الحقيبة والمقتنيات','open-inventory')+panelButton('الخريطة الموسعة','open-map')+panelButton('سجل الرحلة والمهام','open-journal')+panelButton('الصناعة والأدوات','open-craft')+panelButton('السوق والتجارة','open-market')+panelButton('البناء والمأوى','open-build')+panelButton('السكان والعلاقات','open-people')+panelButton('المهارات والتطور','open-skills')}
 if(which==='inventory'){kicker='المقتنيات';title='حقيبة المسافر';body='<div class="stat-grid"><div>خشب <b>'+game.wood+'</b></div><div>حجر <b>'+game.stone+'</b></div><div>أعشاب <b>'+game.herbs+'</b></div><div>طعام <b>'+game.food+'</b></div><div>عملات <b>'+game.coins+'</b></div><div>ماء <b>'+Math.round(game.thirst)+'%</b></div></div>'}
-if(which==='map'){kicker='دليل الرحّالة';title='خريطة الأقاليم الكبرى';body='<div class="world-map"><span class="map-river"></span><span class="map-forest">غابة السنديان</span><span class="map-village">المستوطنة</span><span class="map-fire">موقد الحراسة</span><span class="map-player" style="left:'+((target.x+800)/1600*100)+'%;top:'+((target.z+800)/1600*100)+'%">أنت</span><span class="map-mountain">الجبال</span><span class="map-port">مرفأ النهر</span><span class="map-hills">قرية التلال</span><span class="map-farm">مزارع السهل</span><span class="map-ruins">أطلال الحصن</span></div><p>عالم بمساحة لعب تقارب ١٦٠٠ × ١٦٠٠ متر: غابات وأنهار وقرى ومزارع وأطلال وحصون وممرات جبلية.</p><p>الاكتشافات: '+game.discovered+' · موقعك: '+Math.round(target.x)+' ، '+Math.round(target.z)+'</p>'}
+if(which==='map'){kicker='دليل الرحّالة';title='خريطة الأقاليم الكبرى';body='<div class="world-map"><span class="map-river"></span><span class="map-forest">غابة السنديان</span><span class="map-village">المستوطنة</span><span class="map-fire">موقد الحراسة</span><span class="map-player" style="left:'+((target.x+800)/1600*100)+'%;top:'+((target.z+800)/1600*100)+'%">أنت</span><span class="map-mountain">الجبال</span><span class="map-port">مرفأ النهر</span><span class="map-hills">قرية التلال</span><span class="map-farm">مزارع السهل</span><span class="map-ruins">أطلال الحصن</span></div><p>الأقاليم: وادي السنديان، مرتفعات الصقيع، سهول الرماد، مستنقعات الضباب. لكل إقليم طقسه وبوابته ومعالمه.</p><p>الاكتشافات: '+game.discovered+' · موقعك: '+Math.round(target.x)+' ، '+Math.round(target.z)+'</p>'}
 if(which==='journal'){kicker='ملاحظات ميدانية';title='سجل الرحلة';body='<p>الوادي هادئ، لكنه ليس خالياً. آثار غريبة تظهر قرب الأشجار بعد الغروب.</p><p><b>المهمة الحالية:</b> '+(game.quest===0?'اكتشف موقد الحراسة':game.quest===1?'اجمع ٣ قطع خشب وحجراً واحداً':'عد إلى المستوطنة وابدأ بناء مأوى')+'</p><p>المستوى '+game.level+' · الخبرة '+game.xp+'</p>'}
 if(which==='craft'){kicker='ورشة الصانع';title='الصناعة البدائية';body='<p>حوّل الموارد إلى أدوات تساعدك على البقاء.</p>'+panelButton('صناعة فأس بدائي · ٣ خشب + ٢ حجر','axe')+panelButton('صناعة ضماد · عشب واحد','bandage')+panelButton('تحضير وجبة · طعامان','meal')+panelButton('صناعة رمح خشبي · ٢ خشب','spear')}
 if(which==='market'){kicker='سوق المستوطنة';title='تجارة الوادي';body='<p>تاجر المستوطنة يشتري الموارد ويبيع المؤن.</p>'+panelButton('شراء طعام · ٣ عملات','buyfood')+panelButton('شراء ماء · ٢ عملة','buywater')+panelButton('بيع ٢ خشب · ٤ عملات','sellwood')+panelButton('بيع الأعشاب · ٣ عملات','sellherbs')}
@@ -260,6 +289,7 @@ $('#panel-kicker').textContent=kicker;$('#panel-title').textContent=title;$('#pa
 function gameAction(action){
 const fail=m=>toast('لا تملك الموارد الكافية: '+m);
 if(action.startsWith('open-')){const dest=action.slice(5);openPanel(dest);return}
+if(action==='sleep'){sleepUntilMorning();return}
 if(action==='axe'){if(game.wood<3||game.stone<2)return fail('خشب ٣ وحجر ٢');game.wood-=3;game.stone-=2;game.xp+=15;toast('صنعت فأساً بدائياً.')}
 if(action==='bandage'){if(game.herbs<1)return fail('عشب واحد');game.herbs--;game.health=Math.min(100,game.health+25);toast('استخدمت ضماداً واستعدت الصحة.')}
 if(action==='meal'){if(game.food<2)return fail('طعامان');game.food-=2;game.hunger=Math.min(100,game.hunger+35);toast('أعددت وجبة دافئة.')}
@@ -279,6 +309,8 @@ $('#panel-content').addEventListener('click',e=>{const b=e.target.closest('[data
 document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.panel)));$('#panel-close').onclick=()=>$('#side-panel').classList.remove('open');$('#menu-toggle').onclick=()=>openPanel('journal');
 $('#interact-prompt').addEventListener('click',interact);
 function interact(){
+ const bed=sleepingBeds.find(b=>target.distanceTo(b.world)<3.2);if(bed){$('#panel-kicker').textContent='راحة المسافر';$('#panel-title').textContent='سريرك داخل البيت';$('#panel-content').innerHTML='<p>استرح في فراشك الدافئ حتى شروق الشمس.</p>'+panelButton('النوم حتى الصباح · استعادة الصحة والطاقة','sleep');$('#side-panel').classList.add('open');return}
+ const gate=regionGates.find(g=>target.distanceTo(g.mesh.position)<7);if(gate){$('#panel-kicker').textContent='بوابة إقليمية';$('#panel-title').textContent=gate.name;$('#panel-content').innerHTML='<p>هذه بوابة '+gate.name+'. استكشف معالم الإقليم وطقسه الخاص.</p>';$('#side-panel').classList.add('open');return}
 let nearest=null,dist=8;
 for(const n of resourceNodes){const d=target.distanceTo(n.mesh.position);if(d<dist){nearest=n;dist=d}}
 if(nearest){game[nearest.type]+=nearest.amount;nearest.mesh.visible=false;nearest.used=true;game.xp+=5;saveGame();toast('جمعت '+nearest.label+' · '+nearest.amount);if(game.quest===1&&game.wood>=3&&game.stone>=1){game.quest=2;$('#quest-title').textContent='عد إلى المستوطنة وابنِ مأوى';$('#quest-desc').textContent='أصبحت تملك ما يكفي للبدء.'}return}
@@ -289,14 +321,19 @@ toast('اقترب من مورد أو من موقد الحراسة للتفاعل
 $('#begin').addEventListener('click',()=>{entered=true;$('#hero').style.display='none';$('.region-card').style.display='none';$('#hud').classList.add('active');$('#mobile-controls').style.display='block';$('#control-hint').classList.add('visible');setTimeout(()=>$('#control-hint').classList.remove('visible'),6500);toast('أصبحت البرية ملكك. راقب حافة الغابة.');});
 function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-(animate.last||now))/1000,.04);animate.last=now;elapsed+=dt;clockMinutes+=dt*1.4;if(clockMinutes>=1440){clockMinutes-=1440;day++}
 const hour=Math.floor(clockMinutes/60),minute=Math.floor(clockMinutes%60);$('#world-clock').textContent='اليوم '+String(day+1).padStart(2,'0')+' · '+String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
-updateSurvival(dt,hour);const night=hour<6||hour>19;const daylight=THREE.MathUtils.clamp((Math.sin((hour-6)/13*Math.PI)+.12),.12,1);sun.intensity=.35+daylight*2.5;scene.fog.color.set(night?0x17232a:0x9bb6b0);scene.background.copy(scene.fog.color);scene.fog.density=night?.014:.009;renderer.toneMappingExposure=night?.72:1.12;
+updateSurvival(dt,hour);const night=hour<6||hour>19;const daylight=THREE.MathUtils.clamp((Math.sin((hour-6)/13*Math.PI)+.12),.12,1);sun.intensity=(.22+daylight*2.45)*(weatherKind==='cloud'||weatherKind==='fog'?.72:weatherKind==='rain'||weatherKind==='snow'?.58:1);sun.color.set(weatherKind==='snow'?0xdceeff:night?0x91a9d4:0xffdfad);renderer.toneMappingExposure=night?.72:weatherKind==='snow'?1.2:1.12;
+ const pp=weatherParticles.geo.attributes.position;if(weatherParticles.points.visible){for(let i=0;i<weatherParticles.count;i++){let px=pp.getX(i),py=pp.getY(i),pz=pp.getZ(i);py-=dt*(weatherKind==='snow'?2.2:15);px+=dt*(weatherKind==='snow'?.5:1.3);if(py<0){py=30;px=(Math.random()-.5)*70;pz=(Math.random()-.5)*70}pp.setXYZ(i,px,py,pz)}pp.needsUpdate=true;weatherParticles.points.position.set(target.x,0,target.z)}
+ const regionNow=localRegion(target.x,target.z);if(regionNow==='مرتفعات الصقيع'&&weatherKind!=='snow'&&weatherTick>8)setWeather('snow');if(regionNow==='مستنقعات الضباب'&&weatherKind==='clear')setWeather('fog');
 const fwd=(keys.has('w')||keys.has('arrowup')||move.has('forward')?1:0)-(keys.has('s')||keys.has('arrowdown')||move.has('back')?1:0),side=(keys.has('d')||keys.has('arrowright')||move.has('right')?1:0)-(keys.has('a')||keys.has('arrowleft')||move.has('left')?1:0),moving=!!(fwd||side),sprinting=keys.has('shift')||move.has('sprint');
 if(entered&&moving){const speed=sprinting&&game.stamina>2?10.5:5.8;const norm=1/Math.max(1,Math.hypot(fwd,side));const dx=(Math.sin(yaw)*fwd+Math.cos(yaw)*side)*speed*dt*norm,dz=(Math.cos(yaw)*fwd-Math.sin(yaw)*side)*speed*dt*norm;moveWithCollision(player,dx,dz,.58);target.x=THREE.MathUtils.clamp(player.position.x,-780,780);target.z=THREE.MathUtils.clamp(player.position.z,-780,780);player.rotation.y=Math.atan2(Math.sin(yaw)*fwd+Math.cos(yaw)*side,Math.cos(yaw)*fwd-Math.sin(yaw)*side);game.stamina=Math.max(0,game.stamina-(sprinting?dt*8:dt*.45));}
 walkingBlend=THREE.MathUtils.lerp(walkingBlend,moving?1:0,Math.min(1,dt*9));const swing=Math.sin(elapsed*(sprinting?13:8))*walkingBlend;armPivots[0].rotation.x=swing*.72;armPivots[1].rotation.x=-swing*.72;legPivots[0].rotation.x=-swing*.68;legPivots[1].rotation.x=swing*.68;torso.position.y=1.05+Math.abs(swing)*.035;player.position.x=target.x;player.position.z=target.z;const floor=height(target.x,target.z);if(jumpVelocity||player.position.y>floor+.02){jumpVelocity-=16*dt;player.position.y+=jumpVelocity*dt;if(player.position.y<floor){player.position.y=floor;jumpVelocity=0}}else player.position.y=floor;target.y=player.position.y;
 if(entered&&!moving&&game.stamina<100)game.stamina=Math.min(100,game.stamina+dt*4);
 const camDist=entered?distance:distance;cameraGoal.set(target.x+Math.sin(yaw)*Math.cos(pitch)*camDist,target.y+Math.sin(pitch)*camDist+4,target.z+Math.cos(yaw)*Math.cos(pitch)*camDist);camera.position.lerp(cameraGoal,Math.min(1,dt*5.5));camera.lookAt(target.x,target.y+1.15,target.z);
 flame.scale.setScalar(.88+Math.sin(elapsed*13)*.13);glow.intensity=2+Math.sin(elapsed*17)*.65;const water=riverGeo.attributes.position;for(let i=0;i<water.count;i++){const x=water.getX(i),z=water.getZ(i);water.setY(i,height(x,z)+.22+Math.sin(z*.22+elapsed*2.8+x*.13)*.045+Math.sin(z*.08-elapsed*1.7)*.025)}water.needsUpdate=true;riverGeo.computeVertexNormals();riverMat.opacity=.88+Math.sin(elapsed*1.4)*.035;
-const near=target.distanceTo(fire.position)<10||resourceNodes.some(n=>!n.used&&target.distanceTo(n.mesh.position)<7)||villagers.some(v=>target.distanceTo(v.mesh.position)<6)||wildlife.some(a=>target.distanceTo(a.mesh.position)<4);$('#interact-prompt').style.display=entered&&near?'block':'none';if(entered&&hour>19&&hour<22)$('#weather-label').textContent='حلول الليل';renderer.render(scene,camera)}
+let insideHouse=null;for(const h of houseInstances){const lx=(target.x-h.x)/h.scale,lz=(target.z-h.z)/h.scale;if(Math.abs(lx)<3.25&&Math.abs(lz)<2.65){insideHouse=h;break}}for(const h of houseInstances)h.roof.visible=h!==insideHouse;
+ const bedNear=sleepingBeds.some(b=>target.distanceTo(b.world)<3.2);
+ const near=bedNear||target.distanceTo(fire.position)<10||resourceNodes.some(n=>!n.used&&target.distanceTo(n.mesh.position)<7)||villagers.some(v=>target.distanceTo(v.mesh.position)<6)||wildlife.some(a=>target.distanceTo(a.mesh.position)<4)||regionGates.some(g=>target.distanceTo(g.mesh.position)<7);
+ $('#interact-prompt').style.display=entered&&near?'block':'none';if(entered&&bedNear)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع السرير للنوم حتى الصباح';else if(entered&&near)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع المكان أو المورد القريب';renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight)});
 setTimeout(()=>$('#loading').classList.add('hidden'),1100);
