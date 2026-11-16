@@ -88,3 +88,7 @@ body{direction:rtl}
 .map-forest{right:35%;top:7%}.map-village{left:47%;top:49%}.map-fire{right:39%;bottom:10%}.map-mountain{left:6%;top:45%}
 .map-player{z-index:3;transform:translate(-50%,-50%);padding:5px 7px!important;box-shadow:0 0 0 5px #d7b97944,0 0 18px #ffe1a0}
 .side-panel{max-height:calc(100dvh - 120px);overflow-y:auto}
+
+.interact-prompt{z-index:8;bottom:calc(env(safe-area-inset-bottom,0px) + 178px);padding:12px 16px;border:1px solid #d7b97988;background:#101713ef;border-radius:6px;color:#f3e8cf;font-size:12px;box-shadow:0 8px 28px #0008}
+.interact-prompt span{display:inline-grid;place-items:center;width:25px;height:25px;border:1px solid #d7b979;border-radius:4px;margin-left:8px;color:#d7b979}
+@media(max-width:700px){.interact-prompt{bottom:175px;max-width:88vw;text-align:center}}
