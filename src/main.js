@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import './style.css';
 
 const app = document.querySelector('#app');
 const loading = document.querySelector('#loading');
@@ -148,13 +147,15 @@ document.querySelector('#enter-world').addEventListener('click', () => {
 });
 
 let elapsed = 0;
-function animate() {
+let previousFrame = performance.now();
+function animate(now = performance.now()) {
   requestAnimationFrame(animate);
-  const delta = Math.min(renderer.info.render.frame, 1 / 30);
-  elapsed += 0.016;
+  const delta = Math.min((now - previousFrame) / 1000, 1 / 30);
+  previousFrame = now;
+  elapsed += delta;
   const forward = (keys.has('w') || keys.has('arrowup') ? 1 : 0) - (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
   const sideways = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0);
-  target.x += (Math.sin(yaw) * forward + Math.cos(yaw) * sideways) * 0.12;
+  target.x += (Math.sin(yaw) * forward + Math.cos(yaw) * sideways) * (7.2 * delta);
   target.z += (Math.cos(yaw) * forward - Math.sin(yaw) * sideways) * 0.12;
   camera.position.set(
     target.x + Math.sin(yaw) * Math.cos(pitch) * distance,
