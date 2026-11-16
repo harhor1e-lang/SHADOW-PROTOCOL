@@ -48,7 +48,15 @@ function house(x,z,s=1){const g=new THREE.Group(),wall=new THREE.Mesh(new THREE.
 function rock(x,z,s){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(1,1),mat(0x77786b));o.position.set(x,height(x,z)+s*.4,z);o.scale.set(s*1.2,s*.7,s);o.rotation.set(Math.random(),Math.random(),Math.random());o.castShadow=true;scene.add(o)}
 // distant mountain wall
 for(let i=0;i<64;i++){const a=i/64*Math.PI*2,r=735+Math.random()*80,x=Math.cos(a)*r,z=Math.sin(a)*r;const m=new THREE.Mesh(new THREE.ConeGeometry(9+Math.random()*10,18+Math.random()*24,5),mat(0x53645a));m.position.set(x,8+height(x,z),z);m.rotation.y=Math.random()*6;m.castShadow=true;scene.add(m)}
-for(let i=0;i<1250;i++){const a=Math.random()*Math.PI*2,r=35+Math.random()*690,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.abs(x+55)<16)continue;addTree(x,z,.55+Math.random()*.8)}
+const treeCount=1250,treeDummy=new THREE.Object3D(),treeTrunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.16,.28,2.4,7),mat(0x59402b),treeCount),treeCrownA=new THREE.InstancedMesh(new THREE.ConeGeometry(1.25,3.2,7),mat(0x294b34),treeCount),treeCrownB=new THREE.InstancedMesh(new THREE.ConeGeometry(1.09,3.2,7),mat(0x355d3c),treeCount),treeCrownC=new THREE.InstancedMesh(new THREE.ConeGeometry(.93,3.2,7),mat(0x355d3c),treeCount);
+for(const batch of [treeTrunk,treeCrownA,treeCrownB,treeCrownC]){batch.castShadow=true;batch.receiveShadow=true;scene.add(batch)}
+let placedTrees=0;
+for(let i=0;i<treeCount;i++){const a=Math.random()*Math.PI*2,r=35+Math.random()*690,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.abs(x+55)<16)continue;const scale=.55+Math.random()*.8,y=height(x,z);
+ treeDummy.position.set(x,y+1.2*scale,z);treeDummy.scale.setScalar(scale);treeDummy.updateMatrix();treeTrunk.setMatrixAt(placedTrees,treeDummy.matrix);
+ for(const [batch,offset] of [[treeCrownA,2.6],[treeCrownB,3.25],[treeCrownC,3.9]]){treeDummy.position.set(x,y+offset*scale,z);treeDummy.updateMatrix();batch.setMatrixAt(placedTrees,treeDummy.matrix)}
+ placedTrees++;
+}
+for(const batch of [treeTrunk,treeCrownA,treeCrownB,treeCrownC]){batch.count=placedTrees;batch.instanceMatrix.needsUpdate=true}
 for(let i=0;i<320;i++){const x=(Math.random()-.5)*1400,z=(Math.random()-.5)*1400;if(Math.abs(x+55)>18)rock(x,z,.4+Math.random()*1.5)}
 house(5,2,1);house(14,-7,.78);house(2,-11,.72);house(21,4,.62);
 
@@ -140,10 +148,10 @@ function villager(x,z,name,job){
  g.position.set(x,height(x,z),z);scene.add(g);villagers.push({mesh:g,name,job,homeX:x,homeZ:z,phase:Math.random()*6,armPivots,legPivots});
 }
 villager(10,5,'سالم','مزارع');villager(17,-3,'مريم','معالجة الأعشاب');villager(-1,-9,'حازم','نجار');villager(23,8,'نورس','حارس');
-villager(-350,-250,'عمر','صياد');villager(-372,-270,'ليلى','خبازة');villager(-340,-274,'فارس','حداد');villager(-365,-238,'زهراء','طبيبة');
-villager(360,-320,'جابر','راعٍ');villager(375,-340,'هدى','ناسجة');villager(338,-345,'رعد','حارس');villager(355,-300,'سلمى','مزارعة');
-villager(-405,372,'بشير','تاجر');villager(-430,385,'آمنة','طحّانة');villager(-390,402,'كاظم','صياد');villager(-440,350,'رنا','خبازة');
-villager(405,400,'يونس','رحّالة');villager(380,375,'دلال','بائعة');villager(420,380,'مهند','بنّاء');villager(365,410,'سعيد','حارس');
+villager(-350,-250,'عمر','صياد');villager(-372,-270,'ليلى','خبازة');
+villager(360,-320,'جابر','راعٍ');villager(375,-340,'هدى','ناسجة');
+villager(-405,372,'بشير','تاجر');villager(-430,385,'آمنة','طحّانة');
+villager(405,400,'يونس','رحّالة');villager(380,375,'دلال','بائعة');
 
 const wildlife=[];
 function animal(x,z,kind){
