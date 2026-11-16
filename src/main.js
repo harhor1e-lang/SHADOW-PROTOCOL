@@ -137,9 +137,9 @@ function placeBuild(kind,x,z,rot=0,restoring=false){
 function buildAt(kind){
  const item=buildCatalog[kind];if(!item)return;
  if(game.wood<item.wood||game.stone<item.stone){toast('تحتاج '+item.wood+' خشب و'+item.stone+' حجر.');return}
- const x=Math.round((target.x-Math.sin(yaw)*5)/2)*2,z=Math.round((target.z-Math.cos(yaw)*5)/2)*2;
+ const x=Math.round((target.x+Math.sin(yaw)*5)/2)*2,z=Math.round((target.z+Math.cos(yaw)*5)/2)*2;
  if(Math.hypot(x-target.x,z-target.z)<2.8||blockedPosition(x,z,.9)){toast('المكان غير مناسب للبناء؛ ابتعد عن العوائق.');return}
- game.wood-=item.wood;game.stone-=item.stone;placeBuild(kind,x,z,0);game.placedBuilds.push({kind,x,z,rot:0});game.xp+=8;saveGame();toast('تم بناء '+item.name+' بنجاح.');openPanel('build')
+ game.wood-=item.wood;game.stone-=item.stone;const rot=game.buildRotation||0;placeBuild(kind,x,z,rot);game.placedBuilds.push({kind,x,z,rot});game.xp+=8;saveGame();toast('تم بناء '+item.name+' بنجاح.');openPanel('build')
 }
 
 function rock(x,z,s){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(1,1),mat(0x77786b));o.position.set(x,height(x,z)+s*.4,z);o.scale.set(s*1.2,s*.7,s);o.rotation.set(Math.random(),Math.random(),Math.random());o.castShadow=true;scene.add(o);addCollider(x,z,s*1.15,s*.95,.28)}
@@ -316,7 +316,7 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('visib
 const game={health:100,stamina:100,hunger:100,thirst:100,wood:0,stone:0,herbs:3,food:2,coins:12,level:1,xp:0,discovered:0,quest:0};
 try{Object.assign(game,JSON.parse(localStorage.getItem('shadowProtocolSave')||'{}'))}catch{}
 function saveGame(){try{localStorage.setItem('shadowProtocolSave',JSON.stringify(game))}catch{}}
-if(!Array.isArray(game.placedBuilds))game.placedBuilds=[];
+if(!Array.isArray(game.placedBuilds))game.placedBuilds=[];if(typeof game.buildRotation!=='number')game.buildRotation=0;
 for(const saved of game.placedBuilds){if(saved&&buildCatalog[saved.kind])placeBuild(saved.kind,saved.x,saved.z,saved.rot||0,true)}
 function panelButton(label,action){return '<button class="game-action" data-action="'+action+'">'+label+'</button>'}
 function openPanel(which){
@@ -335,6 +335,7 @@ function gameAction(action){
 const fail=m=>toast('لا تملك الموارد الكافية: '+m);
 if(action.startsWith('open-')){const dest=action.slice(5);openPanel(dest);return}
 if(action==='sleep'){sleepUntilMorning();return}
+ if(action==='rotate-build'){game.buildRotation=((game.buildRotation||0)+Math.PI/2)%(Math.PI*2);saveGame();openPanel('build');toast('تم تدوير قطعة البناء.');return}
  if(action.startsWith('place-')){buildAt(action.slice(6));return}
 if(action==='axe'){if(game.wood<3||game.stone<2)return fail('خشب ٣ وحجر ٢');game.wood-=3;game.stone-=2;game.xp+=15;toast('صنعت فأساً بدائياً.')}
 if(action==='bandage'){if(game.herbs<1)return fail('عشب واحد');game.herbs--;game.health=Math.min(100,game.health+25);toast('استخدمت ضماداً واستعدت الصحة.')}
