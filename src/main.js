@@ -124,7 +124,7 @@ const buildCatalog={
  torch:{name:'مشعل',wood:2,stone:0,kind:'torch'},
  farm:{name:'حوض زراعة',wood:3,stone:1,kind:'farm'}
 };
-function placeBuild(kind,x,z,rot=0,restoring=false){
+function placeBuild(kind,x,z,rot=0,restoring=false,contents=null){
  const item=buildCatalog[kind];if(!item)return null;
  const g=new THREE.Group(),wood=mat(0x765033),plank=mat(0x9a7046),stone=mat(0x77786b),cloth=mat(0x687b70),metal=mat(0x554638),colliderRefs=[];
  const box=(w,h,d,px,py,pz,material)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(px,py,pz);o.castShadow=true;o.receiveShadow=true;g.add(o);return o};
@@ -140,14 +140,14 @@ function placeBuild(kind,x,z,rot=0,restoring=false){
  if(kind==='fence'){box(4,.13,.14,0,.7,0,wood);box(4,.13,.14,0,1.25,0,wood);for(let a=-1.8;a<=1.8;a+=.6)box(.12,1.5,.16,a,.75,0,plank);addCollider(x,z,2,.15,.2)}
  if(kind==='torch'){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.1,1.8,7),wood);pole.position.y=.9;g.add(pole);const flame=new THREE.Mesh(new THREE.ConeGeometry(.22,.65,7),new THREE.MeshBasicMaterial({color:0xff9a36}));flame.position.y=2;g.add(flame);const light=new THREE.PointLight(0xff9b48,1.1,9);light.position.y=2;g.add(light)}
  if(kind==='farm'){box(2.5,.22,2,0,.15,0,wood);box(2.2,.12,1.7,0,.3,0,mat(0x59472d));for(let a=-.7;a<=.7;a+=.7){const crop=new THREE.Mesh(new THREE.ConeGeometry(.16,.65,5),mat(0x6f8b42));crop.position.set(a,.68,0);g.add(crop)}}
- g.position.set(x,height(x,z),z);g.rotation.y=rot;scene.add(g);builtObjects.push({kind,x,z,rot,mesh:g,colliders:colliderRefs});return g
+ g.position.set(x,height(x,z),z);g.rotation.y=rot;scene.add(g);builtObjects.push({kind,x,z,rot,mesh:g,colliders:colliderRefs,contents:kind==='chest'?{wood:contents?.wood||0,stone:contents?.stone||0,herbs:contents?.herbs||0,food:contents?.food||0}:null});return g
 }
 function dismantleNearest(){
  let best=null,dist=7;
  for(const item of builtObjects){if(item.kind==='house')continue;const d=Math.hypot(target.x-item.x,target.z-item.z);if(d<dist){best=item;dist=d}}
  if(!best){toast('اقترب من قطعة بنيتها حتى تفككها.');return}
  scene.remove(best.mesh);
- if(best.kind==='bed'){const bi=sleepingBeds.findIndex(b=>b.mesh===best.mesh);if(bi>=0)sleepingBeds.splice(bi,1)}
+ if(best.kind==='bed'){const bi=sleepingBeds.findIndex(b=>b.mesh===best.mesh);if(bi>=0)sleepingBeds.splice(bi,1)}\n if(best.kind==='chest'&&best.contents){for(const type of ['wood','stone','herbs','food'])game[type]+=best.contents[type]||0}
  for(const c of best.colliders||[]){const minX=Math.floor((c.x-c.hx-c.r)/collisionCell),maxX=Math.floor((c.x+c.hx+c.r)/collisionCell),minZ=Math.floor((c.z-c.hz-c.r)/collisionCell),maxZ=Math.floor((c.z+c.hz+c.r)/collisionCell);for(let gx=minX;gx<=maxX;gx++)for(let gz=minZ;gz<=maxZ;gz++){const key=gx+','+gz,list=collisionGrid.get(key);if(list){const i=list.indexOf(c);if(i>=0)list.splice(i,1);if(!list.length)collisionGrid.delete(key)}}}
  const saved=game.placedBuilds.findIndex(p=>p.kind===best.kind&&Math.abs(p.x-best.x)<.01&&Math.abs(p.z-best.z)<.01);
  if(saved>=0)game.placedBuilds.splice(saved,1);
@@ -160,7 +160,7 @@ function buildAt(kind){
  if(game.wood<item.wood||game.stone<item.stone){toast('تحتاج '+item.wood+' خشب و'+item.stone+' حجر.');return}
  const x=Math.round((target.x+Math.sin(yaw)*5)/2)*2,z=Math.round((target.z+Math.cos(yaw)*5)/2)*2;
  if(Math.hypot(x-target.x,z-target.z)<2.8||blockedPosition(x,z,.9)){toast('المكان غير مناسب للبناء؛ ابتعد عن العوائق.');return}
- game.wood-=item.wood;game.stone-=item.stone;const rot=game.buildRotation||0;placeBuild(kind,x,z,rot);game.placedBuilds.push({kind,x,z,rot});game.xp+=8;saveGame();toast('تم بناء '+item.name+' بنجاح.');openPanel('build')
+ game.wood-=item.wood;game.stone-=item.stone;const rot=game.buildRotation||0;const contents=kind==='chest'?{wood:0,stone:0,herbs:0,food:0}:null;placeBuild(kind,x,z,rot,false,contents);game.placedBuilds.push({kind,x,z,rot,...(contents?{contents}:{})});game.xp+=8;saveGame();toast('تم بناء '+item.name+' بنجاح.');openPanel('build')
 }
 
 function rock(x,z,s){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(1,1),mat(0x77786b));o.position.set(x,height(x,z)+s*.4,z);o.scale.set(s*1.2,s*.7,s);o.rotation.set(Math.random(),Math.random(),Math.random());o.castShadow=true;scene.add(o);addCollider(x,z,s*1.15,s*.95,.28)}
@@ -338,9 +338,9 @@ const game={health:100,stamina:100,hunger:100,thirst:100,wood:0,stone:0,herbs:3,
 try{Object.assign(game,JSON.parse(localStorage.getItem('shadowProtocolSave')||'{}'))}catch{}
 function saveGame(){try{localStorage.setItem('shadowProtocolSave',JSON.stringify(game))}catch{}}
 if(!Array.isArray(game.placedBuilds))game.placedBuilds=[];if(typeof game.buildRotation!=='number')game.buildRotation=0;
-for(const saved of game.placedBuilds){if(saved&&buildCatalog[saved.kind])placeBuild(saved.kind,saved.x,saved.z,saved.rot||0,true)}
+for(const saved of game.placedBuilds){if(saved&&buildCatalog[saved.kind])placeBuild(saved.kind,saved.x,saved.z,saved.rot||0,true,saved.contents||null)}
 function panelButton(label,action){return '<button class="game-action" data-action="'+action+'">'+label+'</button>'}
-function openPanel(which){
+function openChest(chest){\n const c=chest.contents;const labels={wood:'الخشب',stone:'الحجر',herbs:'الأعشاب',food:'الطعام'};\n $('#panel-kicker').textContent='مخزن المستوطنة';$('#panel-title').textContent='صندوق التخزين';\n $('#panel-content').innerHTML='<p>الموجود داخل الصندوق محفوظ حتى بعد إغلاق اللعبة.</p><div class=\'stat-grid\'>'+Object.keys(labels).map(k=>'<div>'+labels[k]+' <b>'+c[k]+'</b></div>').join('')+'</div><p><b>إيداع الموارد</b></p>'+Object.keys(labels).map(k=>panelButton('إيداع كل '+labels[k],'chest-deposit-'+k)).join('')+'<p><b>سحب الموارد</b></p>'+Object.keys(labels).map(k=>panelButton('سحب كل '+labels[k],'chest-withdraw-'+k)).join('');\n $('#side-panel').classList.add('open');\n}\nfunction openPanel(which){
 let title='',kicker='سجل العالم',body='';
 if(which==='library'){kicker='مركز العالم';title='المكتبة';body='<p>كل أنظمة اللعبة وأدواتها في مكان واحد.</p>'+panelButton('الحقيبة والمقتنيات','open-inventory')+panelButton('الخريطة الموسعة','open-map')+panelButton('سجل الرحلة والمهام','open-journal')+panelButton('الصناعة والأدوات','open-craft')+panelButton('السوق والتجارة','open-market')+panelButton('البناء والمأوى','open-build')+panelButton('السكان والعلاقات','open-people')+panelButton('المهارات والتطور','open-skills')}
 if(which==='inventory'){kicker='المقتنيات';title='حقيبة المسافر';body='<div class="stat-grid"><div>خشب <b>'+game.wood+'</b></div><div>حجر <b>'+game.stone+'</b></div><div>أعشاب <b>'+game.herbs+'</b></div><div>طعام <b>'+game.food+'</b></div><div>عملات <b>'+game.coins+'</b></div><div>ماء <b>'+Math.round(game.thirst)+'%</b></div></div>'}
@@ -355,7 +355,7 @@ $('#panel-kicker').textContent=kicker;$('#panel-title').textContent=title;$('#pa
 function gameAction(action){
 const fail=m=>toast('لا تملك الموارد الكافية: '+m);
 if(action.startsWith('open-')){const dest=action.slice(5);openPanel(dest);return}
-if(action==='sleep'){sleepUntilMorning();return}
+if(action==='sleep'){sleepUntilMorning();return}\n if(action.startsWith('chest-')){const parts=action.split('-'),mode=parts[1],type=parts[2];let chest=null,dist=5;for(const b of builtObjects){if(b.kind!=='chest')continue;const d=Math.hypot(target.x-b.x,target.z-b.z);if(d<dist){chest=b;dist=d}}if(!chest){toast('اقترب من صندوق التخزين.');return}const amount=game[type]||0;if(mode==='deposit'){if(amount<=0){toast('لا تملك '+({wood:'خشباً',stone:'حجراً',herbs:'أعشاباً',food:'طعاماً'}[type]||'موارد')+' للإيداع.');return}chest.contents[type]+=amount;game[type]=0;toast('أودعت الموارد في الصندوق.')}else{const taken=chest.contents[type]||0;if(!taken){toast('لا يوجد من هذا المورد في الصندوق.');return}game[type]+=taken;chest.contents[type]=0;toast('سحبت الموارد من الصندوق.')}const saved=game.placedBuilds.find(p=>p.kind==='chest'&&Math.abs(p.x-chest.x)<.01&&Math.abs(p.z-chest.z)<.01);if(saved)saved.contents={...chest.contents};saveGame();openChest(chest);return}
  if(action==='rotate-build'){game.buildRotation=((game.buildRotation||0)+Math.PI/2)%(Math.PI*2);saveGame();openPanel('build');toast('تم تدوير قطعة البناء.');return}
  if(action.startsWith('place-')){buildAt(action.slice(6));return}
  if(action==='dismantle-build'){dismantleNearest();return}
@@ -378,7 +378,7 @@ $('#panel-content').addEventListener('click',e=>{const b=e.target.closest('[data
 document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.panel)));$('#panel-close').onclick=()=>$('#side-panel').classList.remove('open');$('#menu-toggle').onclick=()=>openPanel('journal');
 $('#interact-prompt').addEventListener('click',interact);
 function interact(){
- const bed=sleepingBeds.find(b=>target.distanceTo(b.world)<3.2);if(bed){$('#panel-kicker').textContent='راحة المسافر';$('#panel-title').textContent='سريرك داخل البيت';$('#panel-content').innerHTML='<p>استرح في فراشك الدافئ حتى شروق الشمس.</p>'+panelButton('النوم حتى الصباح · استعادة الصحة والطاقة','sleep');$('#side-panel').classList.add('open');return}
+ const chest=builtObjects.filter(b=>b.kind==='chest').sort((a,b)=>Math.hypot(target.x-a.x,target.z-a.z)-Math.hypot(target.x-b.x,target.z-b.z))[0];if(chest&&Math.hypot(target.x-chest.x,target.z-chest.z)<4.5){openChest(chest);return}\n const bed=sleepingBeds.find(b=>target.distanceTo(b.world)<3.2);if(bed){$('#panel-kicker').textContent='راحة المسافر';$('#panel-title').textContent='سريرك داخل البيت';$('#panel-content').innerHTML='<p>استرح في فراشك الدافئ حتى شروق الشمس.</p>'+panelButton('النوم حتى الصباح · استعادة الصحة والطاقة','sleep');$('#side-panel').classList.add('open');return}
  const gate=regionGates.find(g=>target.distanceTo(g.mesh.position)<7);if(gate){$('#panel-kicker').textContent='بوابة إقليمية';$('#panel-title').textContent=gate.name;$('#panel-content').innerHTML='<p>هذه بوابة '+gate.name+'. استكشف معالم الإقليم وطقسه الخاص.</p>';$('#side-panel').classList.add('open');return}
 let nearest=null,dist=8;
 for(const n of resourceNodes){const d=target.distanceTo(n.mesh.position);if(d<dist){nearest=n;dist=d}}
@@ -402,7 +402,7 @@ const camDist=entered?distance:distance;cameraGoal.set(target.x+Math.sin(yaw)*Ma
 flame.scale.setScalar(.88+Math.sin(elapsed*13)*.13);glow.intensity=2+Math.sin(elapsed*17)*.65;const water=riverGeo.attributes.position;for(let i=0;i<water.count;i++){const x=water.getX(i),z=water.getZ(i);water.setY(i,height(x,z)+.22+Math.sin(z*.22+elapsed*2.8+x*.13)*.045+Math.sin(z*.08-elapsed*1.7)*.025)}water.needsUpdate=true;riverGeo.computeVertexNormals();riverMat.opacity=.88+Math.sin(elapsed*1.4)*.035;
 let insideHouse=null;for(const h of houseInstances){const lx=(target.x-h.x)/h.scale,lz=(target.z-h.z)/h.scale;if(Math.abs(lx)<3.25&&Math.abs(lz)<2.65){insideHouse=h;break}}for(const h of houseInstances)h.roof.visible=h!==insideHouse;
  const bedNear=sleepingBeds.some(b=>target.distanceTo(b.world)<3.2);
- const near=bedNear||target.distanceTo(fire.position)<10||resourceNodes.some(n=>!n.used&&target.distanceTo(n.mesh.position)<7)||villagers.some(v=>target.distanceTo(v.mesh.position)<6)||wildlife.some(a=>target.distanceTo(a.mesh.position)<4)||regionGates.some(g=>target.distanceTo(g.mesh.position)<7);
+ const near=bedNear||builtObjects.some(b=>b.kind==='chest'&&Math.hypot(target.x-b.x,target.z-b.z)<4.5)||target.distanceTo(fire.position)<10||resourceNodes.some(n=>!n.used&&target.distanceTo(n.mesh.position)<7)||villagers.some(v=>target.distanceTo(v.mesh.position)<6)||wildlife.some(a=>target.distanceTo(a.mesh.position)<4)||regionGates.some(g=>target.distanceTo(g.mesh.position)<7);
  $('#interact-prompt').style.display=entered&&near?'block':'none';if(entered&&bedNear)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع السرير للنوم حتى الصباح';else if(entered&&near)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع المكان أو المورد القريب';renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight)});
