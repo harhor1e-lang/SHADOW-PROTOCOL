@@ -263,7 +263,7 @@ const parkingLot=new THREE.Group();scene.add(parkingLot);parkingLot.position.set
 const parkingFloor=new THREE.Mesh(new THREE.BoxGeometry(32,.16,25),mat(0x777b72));parkingFloor.position.y=.1;parkingLot.add(parkingFloor);
 const parkingLine=mat(0xe8dfc6);
 for(let i=0;i<7;i++){const line=new THREE.Mesh(new THREE.BoxGeometry(.14,.035,9),parkingLine);line.position.set(-13+i*4.3,.21,0);parkingLot.add(line);}
-for(const slot of [-10,-2,6]){const parked=makeTrafficCar([0x315d78,0x9c4138,0xc4c9c8][(slot+10)/4]);parked.position.set(slot,.03,-4);parked.rotation.y=Math.PI;parkingLot.add(parked);scene.remove(parked);}
+for(const [i,slot] of [-10,-2,6].entries()){const parked=makeTrafficCar([0x315d78,0x9c4138,0xc4c9c8][i]);parked.position.set(slot,.03,-4);parked.rotation.y=Math.PI;parkingLot.add(parked);}
 const trafficSignals=[];
 function trafficSignal(x,z,rotation=0){const pole=new THREE.Group();pole.position.set(x,0,z);pole.rotation.y=rotation;const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.17,5.5,8),lampMetal);post.position.y=2.75;pole.add(post);const arm=new THREE.Mesh(new THREE.BoxGeometry(.13,.13,2.3),lampMetal);arm.position.set(0,5.35,1);pole.add(arm);const housing=new THREE.Mesh(new THREE.BoxGeometry(.72,1.85,.48),mat(0x20272b));housing.position.set(0,4.45,2.05);pole.add(housing);const lenses=[];for(let i=0;i<3;i++){const lens=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),new THREE.MeshStandardMaterial({color:[0xe33b32,0xe7b83d,0x36bd68][i],emissive:[0x8b100b,0x79520b,0x087a31][i],emissiveIntensity:.7}));lens.position.set(0,5.05-i*.6,2.31);pole.add(lens);lenses.push(lens);}scene.add(pole);trafficSignals.push(lenses);}
 trafficSignal(-9,0,0);trafficSignal(9,0,Math.PI);trafficSignal(0,-9,Math.PI/2);trafficSignal(0,9,-Math.PI/2);
