@@ -159,7 +159,7 @@ for(const side of [-1,1]){
  const glove=new THREE.Mesh(new THREE.SphereGeometry(.125,8,7),leatherMat);glove.position.set(side*.48,.83,0);player.add(glove);
  const pouch=new THREE.Mesh(new THREE.BoxGeometry(.2,.23,.16),leatherMat);pouch.position.set(side*.27,.91,.22);player.add(pouch);
 }
-const hoodRim=new THREE.Mesh(new THREE.TorusGeometry(.255,.035,6,16),mat(0x806a48));hoodRim.position.set(0,1.79,.02);hoodRim.rotation.x=Math.PI/2;headGroup.add(hoodRim);
+// تم حذف تعريف حافة الغطاء المكرر؛ التعريف الأساسي موجود أعلى.
 
 player.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 player.position.set(7,height(7,8),8);scene.add(player);
