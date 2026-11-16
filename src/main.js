@@ -1,4 +1,18 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+let THREE;
+try {
+ THREE = await import('https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js');
+} catch (firstError) {
+ try {
+  THREE = await import('https://unpkg.com/three@0.180.0/build/three.module.js');
+ } catch (secondError) {
+  const loading = document.getElementById('loading');
+  if (loading) {
+   loading.classList.remove('hidden');
+   loading.innerHTML = '<b style="font-size:22px;color:#d7b979">بروتوكول الظلال</b><span>تعذر تحميل محرك الرسوم</span><small>تحقق من اتصال الإنترنت ثم أعد فتح اللعبة.</small>';
+  }
+  throw secondError;
+ }
+}
 const $=s=>document.querySelector(s), app=$('#app'), canvas=$('#world-canvas');
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bb6b0);scene.fog=new THREE.FogExp2(0x9bb6b0,.009);
 const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,2600);camera.position.set(24,19,28);
