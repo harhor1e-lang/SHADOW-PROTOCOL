@@ -187,10 +187,21 @@ addArabicSign(luxuryHome,'قصر اللاعب الفاخر','شارع القصو
 const civicPlaces=[];
 function addCivicPlace(name,kind,address,x,z,color,w=24,h=9,d=18){
  const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
- const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));body.position.y=h/2;body.castShadow=true;group.add(body);
- const roof=new THREE.Mesh(new THREE.BoxGeometry(w+1,.55,d+1),mat(0x46545c));roof.position.y=h+.25;group.add(roof);
- const entry=new THREE.Mesh(new THREE.BoxGeometry(3.2,4,.22),mat(0x344e5d));entry.position.set(0,2,d/2+.12);group.add(entry);
- addArabicSign(group,name,address,Math.min(w-2,21),1.6,0,h-.6,d/2+.2);
+ const plaza=new THREE.Mesh(new THREE.BoxGeometry(w+9,.18,d+10),mat(0x9a9a89));plaza.position.set(0,.02,0);plaza.receiveShadow=true;group.add(plaza);
+ const foundation=new THREE.Mesh(new THREE.BoxGeometry(w+1,1,d+1),mat(0x777d7a));foundation.position.y=.5;group.add(foundation);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));body.position.y=h/2+.7;body.castShadow=true;body.receiveShadow=true;group.add(body);
+ const roof=new THREE.Mesh(new THREE.BoxGeometry(w+1.5,.65,d+1.5),mat(0x46545c));roof.position.y=h+1.05;group.add(roof);
+ const facadeTrim=new THREE.Mesh(new THREE.BoxGeometry(w+.25,.38,.3),mat(0xd4c49f));facadeTrim.position.set(0,h-1,d/2+.17);group.add(facadeTrim);
+ for(const sideX of [-1,1]){
+  const window=new THREE.Mesh(new THREE.BoxGeometry(Math.max(2,w*.19),Math.max(1.8,h*.3),.12),windowMat);window.position.set(sideX*w*.29,h*.57+.7,d/2+.08);group.add(window);
+  const sill=new THREE.Mesh(new THREE.BoxGeometry(Math.max(2.2,w*.21),.16,.42),mat(0x56666a));sill.position.set(sideX*w*.29,h*.42+.7,d/2+.2);group.add(sill);
+  const column=new THREE.Mesh(new THREE.BoxGeometry(.42,Math.max(4,h*.72),.5),mat(0xe0d9c9));column.position.set(sideX*(w*.43),Math.max(2,h*.36)+.7,d/2+.12);group.add(column);
+ }
+ const entry=new THREE.Mesh(new THREE.BoxGeometry(3.2,4,.22),mat(0x344e5d));entry.position.set(0,2.7,d/2+.14);group.add(entry);
+ const canopy=new THREE.Mesh(new THREE.BoxGeometry(Math.min(8,w*.48),.32,2.1),mat(0x9d493c));canopy.position.set(0,4.9,d/2+.85);group.add(canopy);
+ const step=new THREE.Mesh(new THREE.BoxGeometry(6,.25,2.2),mat(0xd7d0bf));step.position.set(0,.3,d/2+1.15);group.add(step);
+ const roofUnit=new THREE.Mesh(new THREE.BoxGeometry(w*.22,1.1,d*.25),mat(0x67777a));roofUnit.position.set(-w*.28,h+1.9,-d*.2);group.add(roofUnit);
+ addArabicSign(group,name,address,Math.min(w-2,21),1.6,0,h+.35,d/2+.22);
  civicPlaces.push({group,name,kind,address});
  return group;
 }
