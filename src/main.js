@@ -149,6 +149,55 @@ const vMouth=new THREE.Mesh(new THREE.BoxGeometry(.09,.018,.02),mat(0x8d514d));v
 
 // Decorative waterfront and marina edge
 const water=new THREE.Mesh(new THREE.PlaneGeometry(600,75),new THREE.MeshStandardMaterial({color:0x3c91a5,roughness:.25,metalness:.12}));water.rotation.x=-Math.PI/2;water.position.set(0,-.04,-270);scene.add(water);
+
+// Luxury permanent player home: furnished interior, courtyard, pool and garage.
+const luxuryHome=new THREE.Group();luxuryHome.position.set(0,0,18);scene.add(luxuryHome);
+const homeFloor=new THREE.Mesh(new THREE.BoxGeometry(24,.35,20),mat(0xb9aa91));homeFloor.position.set(0,.05,0);luxuryHome.add(homeFloor);
+const homeWallMat=mat(0xe4dfd2),homeTrim=mat(0x8d6c4c),homeGlass=new THREE.MeshStandardMaterial({color:0x456a78,metalness:.28,roughness:.16});
+for(const [x,z,w,d,h] of [[0,-10,24,.45,6],[-12,0,.45,20,6],[12,0,.45,20,6],[0,10,24,.45,6]]){const wall=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),homeWallMat);wall.position.set(x,3,z);luxuryHome.add(wall);}
+const homeRoof=new THREE.Mesh(new THREE.BoxGeometry(24,.55,20),mat(0x343e47));homeRoof.position.y=6.3;luxuryHome.add(homeRoof);
+for(const x of [-8,-4,4,8]){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.55,5.7,.55),homeTrim);pillar.position.set(x,2.9,9.7);luxuryHome.add(pillar);}
+const loungeRug=new THREE.Mesh(new THREE.BoxGeometry(10,.08,6),mat(0x7b5550));loungeRug.position.set(-2,.27,-2);luxuryHome.add(loungeRug);
+const sofaBase=new THREE.Mesh(new THREE.BoxGeometry(6,.8,1.5),mat(0x4d5960));sofaBase.position.set(-2,.85,-5);luxuryHome.add(sofaBase);
+const sofaBack=new THREE.Mesh(new THREE.BoxGeometry(6,1.3,.35),mat(0x4d5960));sofaBack.position.set(-2,1.45,-5.65);luxuryHome.add(sofaBack);
+const table=new THREE.Mesh(new THREE.BoxGeometry(3,.35,1.5),homeTrim);table.position.set(-2,.75,-1.8);luxuryHome.add(table);
+const tv=new THREE.Mesh(new THREE.BoxGeometry(4,2.2,.18),mat(0x111820));tv.position.set(-2,2.1,-9.65);luxuryHome.add(tv);
+const bedBase=new THREE.Mesh(new THREE.BoxGeometry(5,.65,6),mat(0x6d5548));bedBase.position.set(7,.65,2);luxuryHome.add(bedBase);
+const mattress=new THREE.Mesh(new THREE.BoxGeometry(4.8,.35,5.8),mat(0xe7e2d7));mattress.position.set(7,1.12,2);luxuryHome.add(mattress);
+for(const x of [5.8,8.2]){const pillow=new THREE.Mesh(new THREE.BoxGeometry(1.5,.25,1),mat(0xffffff));pillow.position.set(x,1.42,-.05);luxuryHome.add(pillow);}
+const chandelier=new THREE.Group();chandelier.position.set(0,5.7,0);luxuryHome.add(chandelier);
+const chandelierCore=new THREE.Mesh(new THREE.SphereGeometry(.45,12,10),new THREE.MeshStandardMaterial({color:0xffe2a1,emissive:0xffc66b,emissiveIntensity:1.4}));chandelier.add(chandelierCore);
+for(let i=0;i<6;i++){const arm=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,2.2),homeTrim);arm.rotation.y=i*Math.PI/3;chandelier.add(arm);}
+const kitchenIsland=new THREE.Mesh(new THREE.BoxGeometry(5,1.1,2),mat(0x777d7b));kitchenIsland.position.set(7,1, -6);luxuryHome.add(kitchenIsland);
+const homePool=new THREE.Mesh(new THREE.BoxGeometry(13,.45,5),new THREE.MeshStandardMaterial({color:0x258ca5,metalness:.2,roughness:.16}));homePool.position.set(0,.25,15);luxuryHome.add(homePool);
+const poolRim=new THREE.Mesh(new THREE.BoxGeometry(14,.35,6),mat(0xd6d0c3));poolRim.position.set(0,.05,15);luxuryHome.add(poolRim);homePool.position.y=.28;
+const garage=new THREE.Mesh(new THREE.BoxGeometry(9,4,8),mat(0xc5c3b9));garage.position.set(18,2,-5);luxuryHome.add(garage);
+const garageDoor=new THREE.Mesh(new THREE.BoxGeometry(8,.12,3.4),mat(0x48565c));garageDoor.position.set(18,1.7,-.9);luxuryHome.add(garageDoor);
+addArabicSign(luxuryHome,'قصر اللاعب الفاخر','شارع القصور - وسط المدينة',15,1.5,0,5,10.25);
+
+// City services, military and community districts with Arabic addresses.
+const civicPlaces=[];
+function addCivicPlace(name,kind,address,x,z,color,w=24,h=9,d=18){
+ const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));body.position.y=h/2;body.castShadow=true;group.add(body);
+ const roof=new THREE.Mesh(new THREE.BoxGeometry(w+1,.55,d+1),mat(0x46545c));roof.position.y=h+.25;group.add(roof);
+ const entry=new THREE.Mesh(new THREE.BoxGeometry(3.2,4,.22),mat(0x344e5d));entry.position.set(0,2,d/2+.12);group.add(entry);
+ addArabicSign(group,name,address,Math.min(w-2,21),1.6,0,h-.6,d/2+.2);
+ civicPlaces.push({group,name,kind,address});
+ return group;
+}
+addCivicPlace('مستشفى وتين العام','مستشفى','شارع الصحة - الحي الطبي',-175,115,0xd8dedb,32,12,22);
+addCivicPlace('مركز الطوارئ التخصصي','مركز إسعاف','شارع الصحة - الحي الطبي',-135,115,0xbfcfca,22,8,17);
+addCivicPlace('مديرية شرطة وتين','شرطة','شارع الأمن - وسط المدينة',-90,115,0x7f929d,26,10,19);
+addCivicPlace('مركز الدفاع المدني','إطفاء','شارع الإنقاذ - وسط المدينة',-45,115,0xc18b70,24,9,18);
+addCivicPlace('جامعة وتين','جامعة','شارع المعرفة - الحي التعليمي',15,115,0xd0c5a8,34,11,22);
+addCivicPlace('مدرسة الأجيال','مدرسة','شارع المعرفة - الحي التعليمي',65,115,0xb7c8d0,25,8,18);
+addCivicPlace('قاعدة وتين العسكرية','قاعدة عسكرية','طريق القاعدة - الأطراف الشمالية',-245,75,0x737e6c,38,10,25);
+addCivicPlace('معسكر التدريب المركزي','معسكر تدريب','طريق القاعدة - الأطراف الشمالية',-245,25,0x858b78,32,8,22);
+addCivicPlace('المنطقة الصناعية','مصانع وورش','شارع الصناعة - المنطقة الصناعية',-245,-65,0x858b8c,38,12,25);
+addCivicPlace('ميناء وتين التجاري','ميناء','طريق الميناء - الساحل الغربي',-175,-115,0x87999b,32,9,20);
+addCivicPlace('مركز التسوق الكبير','مركز تجاري','شارع التجارة - وسط المدينة',85,115,0xb7a58c,28,10,20);
+
 const player=new THREE.Group();scene.add(player);
 const skin=mat(0xb98260),shirt=mat(0x263d50),pants=mat(0x20252b),shoe=mat(0x17191b);
 const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.8,4,8),shirt);torso.position.y=1.48;torso.castShadow=true;player.add(torso);
@@ -438,7 +487,7 @@ document.querySelector('#economyClose').addEventListener('click',()=>economyPane
 function showEconomy(title,info,actions){document.querySelector('#economyTitle').textContent=title;document.querySelector('#economyInfo').textContent=info;const host=document.querySelector('#economyActions');host.replaceChildren();for(const action of actions){const b=document.createElement('button');b.textContent=action.label;b.style.cssText='padding:12px 8px;border:1px solid #ffffff30;border-radius:10px;background:#263b49;color:#fff;font:12px Tahoma;';b.addEventListener('click',action.run);host.appendChild(b);}economyPanel.style.display='block';}
 const workPoint=new THREE.Vector3(-19,0,5);
 
-const homePoint=new THREE.Vector3(-22,0,-18);
+const homePoint=new THREE.Vector3(0,0,18);
 function makeWorldMarker(position,color,label){
  const group=new THREE.Group();group.position.copy(position);scene.add(group);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.05,.09,8,24),mat(color));ring.rotation.x=Math.PI/2;ring.position.y=.12;group.add(ring);
@@ -460,11 +509,12 @@ function interactWorld(){
  if(nearShop){openShop();return;}
  if(player.position.distanceTo(restaurant.position)<14){showEconomy('مطعم وتين','أهلاً بك! اختر وجبتك من مطعم المدينة.',[{label:'وجبة ساخنة - 80',run:()=>{if(wallet<80){document.querySelector('#economyInfo').textContent='رصيدك لا يكفي.';return;}wallet-=80;foodStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم تجهيز وجبتك. صحة جيدة!';}},{label:'ماء بارد - 20',run:()=>{if(wallet<20){document.querySelector('#economyInfo').textContent='رصيدك لا يكفي.';return;}wallet-=20;waterStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الماء البارد.';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
  if(player.position.distanceTo(airport.position)<42){showEconomy('مطار وتين الدولي','العنوان: طريق المطار - الضواحي الغربية. صالة سفر وبوابات مرقمة وحافلة ركاب ومنطقة أمتعة ولوحة رحلات.',[{label:airportBaggageJobDone?'مهمة الأمتعة مكتملة':'إنجاز مهمة توصيل الأمتعة +180',run:()=>{if(airportBaggageJobDone){document.querySelector('#economyInfo').textContent='أنجزت مهمة الأمتعة مسبقاً. ترقّب مهام المطار القادمة.';return;}airportBaggageJobDone=true;wallet+=180;refreshWallet();document.querySelector('#economyInfo').textContent='أحسنت! أوصلت الأمتعة إلى منطقة التحميل وحصلت على 180 من رصيدك.';}},{label:'استكشاف المطار',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='أهلاً بك في مطار وتين الدولي — تابع حافلة المسافرين ولوحة الرحلات';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
+ const nearbyCivic=civicPlaces.find(item=>player.position.distanceTo(item.group.position)<25);if(nearbyCivic){showEconomy(nearbyCivic.name,'العنوان: '+nearbyCivic.address+'. مرفق '+nearbyCivic.kind+' ضمن خدمات مدينة وتين.',[{label:'زيارة المرفق',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='وصلت إلى '+nearbyCivic.name+' — '+nearbyCivic.kind;}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
  if(player.position.distanceTo(heliport.position)<28){showEconomy('مهبط وتين الجوي','العنوان: طريق الخدمات الشمالية. مهبط للطوارئ والنقل الجوي مع مروحية إنقاذ.',[{label:'تفقد المروحية',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='مروحية الإنقاذ جاهزة في مهبط وتين';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
  const nearResidence=residentialBlocks.find(item=>player.position.distanceTo(item.group.position)<19);
  if(nearResidence){showEconomy(nearResidence.name,'العنوان: '+nearResidence.address+'. مبنى سكني متعدد الطوابق في مدينة وتين.',[{label:'دخول المبنى',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='وصلت إلى '+nearResidence.name+' — قريباً: شقق داخلية قابلة للاستكشاف';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
  if(player.position.distanceTo(workPoint)<12){startWork();return;}
- if(player.position.distanceTo(homePoint)<12){restAtHome();return;}
+ if(player.position.distanceTo(homePoint)<18){showEconomy('قصر اللاعب الفاخر','أنت في منزلك الرئيسي. قصر فاخر مفروش مع غرفة نوم وصالة ومطبخ ومسبح وكراج. ستبدأ كل جلسة لعب من داخل هذا المنزل.',[{label:'الراحة والنوم',run:()=>{restAtHome();}},{label:'استكشاف القصر',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='مرحباً بك في قصرك الفاخر — الصالة وغرفة النوم والمسبح والكراج';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
  const nearVisitor=player.position.distanceTo(visitor.position)<5;
  if(nearVisitor){showEconomy('أحد سكان المدينة','مرحباً بك في وتين ستي! المدينة تكبر بوجودك.',[{label:'إلقاء التحية',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='تبادلت التحية مع أحد السكان';}}]);return;}
  document.querySelector('#hint').textContent='اقترب من المتجر أو مكتب العمل أو منزلك للتفاعل';
