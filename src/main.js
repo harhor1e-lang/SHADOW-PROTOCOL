@@ -119,14 +119,14 @@ const target=new THREE.Vector3(7,0,8),keys=new Set(),move=new Set();
 const resourceNodes=[];
 function resourceNode(x,z,type,label,color,amount=1){const g=new THREE.Group();const mesh=new THREE.Mesh(type==='wood'?new THREE.CylinderGeometry(.18,.25,1.8,7):type==='stone'?new THREE.DodecahedronGeometry(.7,1):new THREE.SphereGeometry(.48,8,7),mat(color));mesh.castShadow=true;mesh.position.y=type==='wood'?.9:.45;g.add(mesh);g.position.set(x,height(x,z),z);scene.add(g);resourceNodes.push({mesh:g,type,label,amount,used:false})}
 for(let i=0;i<24;i++){const a=Math.random()*Math.PI*2,r=9+Math.random()*36,x=target.x+Math.cos(a)*r,z=target.z+Math.sin(a)*r;resourceNode(x,z,i%3===0?'stone':i%3===1?'wood':'herbs',i%3===0?'حجر':i%3===1?'خشب':'أعشاب',i%3===0?0x85877d:i%3===1?0x76502f:0x7d9b55,i%3===1?1:1)}
-const hairColorFor=name=>name==='سالم'?0x493322:name==='مريم'?0x30251f:name==='حازم'?0x3b2920:0x24201d;
+const hairColorFor=name=>['مريم','ليلى','زهراء','هدى','سلمى','آمنة','رنا','دلال'].includes(name)?0x30251f:['عمر','فارس','جابر','بشير','كاظم','يونس','مهند'].includes(name)?0x493322:0x24201d;
 const villagers=[];
 function villager(x,z,name,job){
- const g=new THREE.Group(),coatColors={'سالم':0x657b43,'مريم':0x8c5968,'حازم':0x806044,'نورس':0x465d70},coat=mat(coatColors[name]||0x75634a),skin=mat(0xb98768),hair=mat(name==='سالم'?0x493322:0x30251f),boots=mat(0x33251d);
+ const g=new THREE.Group(),coatColors={'سالم':0x657b43,'مريم':0x8c5968,'حازم':0x806044,'نورس':0x465d70,'عمر':0x776247,'ليلى':0x965f68,'فارس':0x665b4c,'زهراء':0x477b72,'جابر':0x8a7547,'هدى':0x80658d,'رعد':0x455b70,'سلمى':0x72864a,'بشير':0x8b6740,'آمنة':0x8b5966,'كاظم':0x596d54,'رنا':0x9a705b,'يونس':0x586d79,'دلال':0x936b79,'مهند':0x78634a,'سعيد':0x4b6272},coat=mat(coatColors[name]||0x75634a),skin=mat(0xb98768),hair=mat(name==='سالم'?0x493322:0x30251f),boots=mat(0x33251d);
  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.31,.7,5,10),coat);body.position.y=.91;g.add(body);
  const beltMesh=new THREE.Mesh(new THREE.TorusGeometry(.29,.045,6,14),leatherMat);beltMesh.position.y=.72;beltMesh.rotation.x=Math.PI/2;g.add(beltMesh);
  const headNode=new THREE.Group();headNode.position.y=1.52;g.add(headNode);
- detailedFace(headNode,name==='مريم'?0xb98268:name==='نورس'?0xa87555:0xc08a68,hairColorFor(name),name==='مريم'?0x547b70:name==='نورس'?0x4a5c62:0x765238,name==='حازم'||name==='نورس');
+ detailedFace(headNode,['مريم','زهراء','ليلى','آمنة','رنا','دلال'].includes(name)?0xb98268:['نورس','عمر','فارس','جابر','كاظم','يونس'].includes(name)?0xa87555:0xc08a68,hairColorFor(name),name==='مريم'?0x547b70:name==='نورس'?0x4a5c62:0x765238,name==='حازم'||name==='نورس');
  const armPivots=[],legPivots=[];
  for(const side of [-1,1]){
   const arm=new THREE.Group();arm.position.set(side*.38,1.25,0);const sleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.48,4,8),coat);sleeve.position.y=-.27;sleeve.rotation.z=side*.12;arm.add(sleeve);const hand=new THREE.Mesh(new THREE.SphereGeometry(.085,8,6),skin);hand.position.y=-.55;arm.add(hand);g.add(arm);armPivots.push(arm);
@@ -140,6 +140,10 @@ function villager(x,z,name,job){
  g.position.set(x,height(x,z),z);scene.add(g);villagers.push({mesh:g,name,job,homeX:x,homeZ:z,phase:Math.random()*6,armPivots,legPivots});
 }
 villager(10,5,'سالم','مزارع');villager(17,-3,'مريم','معالجة الأعشاب');villager(-1,-9,'حازم','نجار');villager(23,8,'نورس','حارس');
+villager(-350,-250,'عمر','صياد');villager(-372,-270,'ليلى','خبازة');villager(-340,-274,'فارس','حداد');villager(-365,-238,'زهراء','طبيبة');
+villager(360,-320,'جابر','راعٍ');villager(375,-340,'هدى','ناسجة');villager(338,-345,'رعد','حارس');villager(355,-300,'سلمى','مزارعة');
+villager(-405,372,'بشير','تاجر');villager(-430,385,'آمنة','طحّانة');villager(-390,402,'كاظم','صياد');villager(-440,350,'رنا','خبازة');
+villager(405,400,'يونس','رحّالة');villager(380,375,'دلال','بائعة');villager(420,380,'مهند','بنّاء');villager(365,410,'سعيد','حارس');
 
 const wildlife=[];
 function animal(x,z,kind){
