@@ -128,8 +128,30 @@ function faceDetails(group,scale=1){
 }
 faceDetails(player);
 
-for(const x of [-.23,.23]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.27,.8,.3),pants);leg.position.set(x,.55,0);player.add(leg);const foot=new THREE.Mesh(new THREE.BoxGeometry(.3,.18,.48),shoe);foot.position.set(x,.14,.08);player.add(foot)}
-for(const x of [-.58,.58]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.16,.62,3,7),skin);arm.position.set(x,1.52,0);arm.rotation.z=x*.35;player.add(arm)}
+// Neck, jawline, layered hair and subtle facial shaping
+const neck=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.28,12),skin);neck.position.y=2.02;player.add(neck);
+const jaw=new THREE.Mesh(new THREE.SphereGeometry(.255,14,12),skin);jaw.scale.set(1,.72,.88);jaw.position.set(0,2.22,.035);player.add(jaw);
+const noseBridge=new THREE.Mesh(new THREE.CapsuleGeometry(.027,.105,4,7),skin);noseBridge.position.set(0,2.345,.305);player.add(noseBridge);
+for(const x of [-.19,.19]){const cheek=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),skin);cheek.scale.set(1,.7,.45);cheek.position.set(x,2.285,.235);player.add(cheek)}
+const hairFringe=new THREE.Mesh(new THREE.SphereGeometry(.34,14,10,0,Math.PI,0,Math.PI*.32),mat(0x211d1a));hairFringe.scale.set(1,.75,1);hairFringe.position.set(0,2.53,.035);player.add(hairFringe);
+const collar=new THREE.Mesh(new THREE.CylinderGeometry(.24,.31,.18,12),mat(0x172b38));collar.position.set(0,1.94,0);player.add(collar);
+const jacketFront=new THREE.Mesh(new THREE.BoxGeometry(.12,.72,.045),mat(0x52616a));jacketFront.position.set(0,1.48,.47);player.add(jacketFront);
+const legPivots=[],armPivots=[];
+for(const x of [-.23,.23]){
+ const pivot=new THREE.Group();pivot.position.set(x,.94,0);player.add(pivot);
+ const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.14,.62,5,9),pants);leg.position.y=-.39;leg.castShadow=true;pivot.add(leg);
+ const knee=new THREE.Mesh(new THREE.SphereGeometry(.145,10,8),pants);knee.position.y=-.55;pivot.add(knee);
+ const foot=new THREE.Mesh(new THREE.BoxGeometry(.29,.17,.46),shoe);foot.position.set(0,-.82,.1);foot.castShadow=true;pivot.add(foot);
+ const sole=new THREE.Mesh(new THREE.BoxGeometry(.3,.045,.47),mat(0x080a0c));sole.position.set(0,-.91,.1);pivot.add(sole);
+ legPivots.push(pivot);
+}
+for(const x of [-.58,.58]){
+ const pivot=new THREE.Group();pivot.position.set(x,1.83,0);player.add(pivot);
+ const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.145,.62,5,9),shirt);arm.position.y=-.38;arm.castShadow=true;pivot.add(arm);
+ const forearm=new THREE.Mesh(new THREE.CapsuleGeometry(.115,.38,5,8),skin);forearm.position.set(0,-.79,.015);pivot.add(forearm);
+ const hand=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),skin);hand.position.set(0,-1.04,.035);pivot.add(hand);
+ armPivots.push(pivot);
+}
 player.position.set(0,0,18);
 const car=new THREE.Group();const carBody=new THREE.Mesh(new THREE.BoxGeometry(2.3,.75,4.4),mat(0xa33d32,.42));carBody.position.y=.85;car.add(carBody);const cabin=new THREE.Mesh(new THREE.BoxGeometry(1.75,.8,2.1),windowMat);cabin.position.set(0,1.55,-.25);car.add(cabin);for(const x of [-1,1])for(const z of [-1.4,1.4]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.24,12),mat(0x17191b));wheel.rotation.z=Math.PI/2;wheel.position.set(x, .43,z);car.add(wheel)}car.position.set(7,0,18);car.rotation.y=Math.PI;scene.add(car);
 let inCar=false,run=false;const keys={};let joy={x:0,y:0};let yaw=0;
@@ -141,8 +163,8 @@ function moveStick(e){const r=area.getBoundingClientRect(),cx=r.left+r.width/2,c
 function resetStick(){pointer=null;joy={x:0,y:0};stick.style.transform='translate(0,0)'}area.addEventListener('pointerup',resetStick);area.addEventListener('pointercancel',resetStick);
 document.querySelector('#runBtn').addEventListener('pointerdown',()=>run=true);document.querySelector('#runBtn').addEventListener('pointerup',()=>run=false);document.querySelector('#runBtn').addEventListener('pointerleave',()=>run=false);
 document.querySelector('#enterBtn').addEventListener('click',()=>{if(!inCar&&player.position.distanceTo(car.position)<5){inCar=true;document.querySelector('#hint').textContent='أنت الآن تقود السيارة'}else if(inCar){inCar=false;player.position.copy(car.position).add(new THREE.Vector3(2,0,0));document.querySelector('#hint').textContent='نزلت من السيارة'}else document.querySelector('#hint').textContent='اقترب من السيارة حتى تتمكن من ركوبها'});
-const clock=new THREE.Clock();const desired=new THREE.Vector3();let frame=0;
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);const forward=(keys.w||keys.arrowup?-1:0)+(keys.s||keys.arrowdown?1:0)-joy.y;const side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;const moving=Math.abs(forward)+Math.abs(side)>.08;const target=inCar?car:player;const speed=inCar?22:(run?10:5.2);if(moving){const angle=Math.atan2(side,-forward);target.rotation.y=angle+yaw;const dir=new THREE.Vector3(Math.sin(target.rotation.y),0,Math.cos(target.rotation.y));target.position.addScaledVector(dir,speed*dt*Math.min(1,Math.hypot(forward,side)));target.position.x=THREE.MathUtils.clamp(target.position.x,-285,285);target.position.z=THREE.MathUtils.clamp(target.position.z,-285,285)}if(inCar){player.position.copy(car.position);player.visible=false}else player.visible=true;
+const clock=new THREE.Clock();const desired=new THREE.Vector3();let frame=0,walkPhase=0;
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);const forward=(keys.w||keys.arrowup?-1:0)+(keys.s||keys.arrowdown?1:0)-joy.y;const side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;const moving=Math.abs(forward)+Math.abs(side)>.08;const target=inCar?car:player;if(moving&&!inCar)walkPhase+=dt*(run?12:7);const speed=inCar?22:(run?10:5.2);if(moving){const angle=Math.atan2(side,-forward);target.rotation.y=angle+yaw;const dir=new THREE.Vector3(Math.sin(target.rotation.y),0,Math.cos(target.rotation.y));target.position.addScaledVector(dir,speed*dt*Math.min(1,Math.hypot(forward,side)));target.position.x=THREE.MathUtils.clamp(target.position.x,-285,285);target.position.z=THREE.MathUtils.clamp(target.position.z,-285,285)}if(inCar){player.position.copy(car.position);player.visible=false}else player.visible=true;const gait=moving&&!inCar?1:0;legPivots.forEach((p,i)=>{p.rotation.x=Math.sin(walkPhase+i*Math.PI)*.62*gait;p.rotation.z=0});armPivots.forEach((p,i)=>{p.rotation.x=-Math.sin(walkPhase+i*Math.PI)*.48*gait;p.rotation.z=(i===0?-.08:.08)});
 const focus=inCar?car:player;desired.set(focus.position.x+Math.sin(focus.rotation.y)*-10,focus.position.y+7,focus.position.z+Math.cos(focus.rotation.y)*-10);camera.position.lerp(desired,1-Math.exp(-4*dt));camera.lookAt(focus.position.x,focus.position.y+1.5,focus.position.z);
 frame+=dt;if(frame>5){frame=0;const d=Math.hypot(player.position.x,player.position.z);document.querySelector('#location').textContent=d<100?'وسط وتين':player.position.z<-180?'واجهة الميناء':'الأحياء الجديدة'}
 renderer.render(scene,camera)}
