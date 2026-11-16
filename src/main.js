@@ -1,4 +1,3 @@
-import './style.css';
 import * as THREE from 'three';
 
 function drawCompatibilityCity(error) {
@@ -68,7 +67,7 @@ function updateOrientationLayout(){document.body.classList.toggle('portrait-mode
 updateOrientationLayout();
 window.addEventListener('resize',updateOrientationLayout,{passive:true});
 window.addEventListener('orientationchange',()=>setTimeout(updateOrientationLayout,180),{passive:true});
-if(introButton)introButton.addEventListener('click',async()=>{
+if(introButton && !introButton.dataset.introBound)introButton.addEventListener('click',async()=>{
  try{if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch(e){}
  try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape');}catch(e){}
  document.querySelector('#introScreen')?.classList.add('closed');
