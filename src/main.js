@@ -197,8 +197,52 @@ function moveStick(e){const r=area.getBoundingClientRect(),cx=r.left+r.width/2,c
 function resetStick(){pointer=null;joy={x:0,y:0};stick.style.transform='translate(0,0)'}area.addEventListener('pointerup',resetStick);area.addEventListener('pointercancel',resetStick);
 document.querySelector('#runBtn').addEventListener('pointerdown',()=>run=true);document.querySelector('#runBtn').addEventListener('pointerup',()=>run=false);document.querySelector('#runBtn').addEventListener('pointerleave',()=>run=false);
 document.querySelector('#enterBtn').addEventListener('click',()=>{if(!inCar&&player.position.distanceTo(car.position)<5){inCar=true;document.querySelector('#hint').textContent='أنت الآن تقود السيارة'}else if(inCar){inCar=false;player.position.copy(car.position).add(new THREE.Vector3(2,0,0));document.querySelector('#hint').textContent='نزلت من السيارة'}else document.querySelector('#hint').textContent='اقترب من السيارة حتى تتمكن من ركوبها'});
+
+// Living city systems: pedestrian routes, moving traffic, shops and time of day.
+const citizenMaterials=[mat(0x38536b),mat(0x8b4d3f),mat(0x6b7650),mat(0x6c5278),mat(0xb18b53)];
+const citizens=[];
+for(let i=0;i<12;i++){
+ const npc=new THREE.Group();
+ const clothes=citizenMaterials[i%citizenMaterials.length];
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.28,.72,4,8),clothes);body.position.y=1.18;npc.add(body);
+ const headNpc=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),mat([0xb98260,0x9b6a4f,0xd0a17d][i%3]));headNpc.position.y=1.86;npc.add(headNpc);
+ const hairNpc=new THREE.Mesh(new THREE.SphereGeometry(.225,10,8,0,Math.PI*2,0,Math.PI*.55),mat(0x29211d));hairNpc.position.set(0,1.94,-.025);npc.add(hairNpc);
+ const legs=[];
+ for(const side of [-1,1]){const pivot=new THREE.Group();pivot.position.set(side*.11,.78,0);npc.add(pivot);const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.085,.55,3,7),mat(0x242a31));leg.position.y=-.32;pivot.add(leg);legs.push(pivot);}
+ const arms=[];
+ for(const side of [-1,1]){const pivot=new THREE.Group();pivot.position.set(side*.32,1.42,0);npc.add(pivot);const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.48,3,7),clothes);arm.position.y=-.25;pivot.add(arm);arms.push(pivot);}
+ const route=i%4,offset=(i%3)*5;
+ npc.position.set(route===0?-13:route===1?13:offset,0,route===2?-13:route===3?13:offset);
+ scene.add(npc);citizens.push({npc,legs,arms,phase:i*.8,route,speed:1.1+(i%4)*.18,origin:npc.position.clone()});
+}
+const traffic=[];
+function makeTrafficCar(color){
+ const g=new THREE.Group();const body=new THREE.Mesh(new THREE.BoxGeometry(1.8,.62,3.4),mat(color,.45));body.position.y=.68;g.add(body);
+ const glass=new THREE.Mesh(new THREE.BoxGeometry(1.35,.55,1.5),windowMat);glass.position.set(0,1.18,-.15);g.add(glass);
+ for(const x of [-.92,.92])for(const z of [-1.05,1.05]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.29,.29,.18,10),mat(0x151719));w.rotation.z=Math.PI/2;w.position.set(x,.35,z);g.add(w);}
+ scene.add(g);return g;
+}
+for(let i=0;i<6;i++){const vehicle=makeTrafficCar([0x9c4138,0xc4c9c8,0x315d78,0xc69a4c,0x53664d,0x292e33][i]);traffic.push({vehicle,lane:i%2?13:-13,progress:i/6,direction:i%2?1:-1,speed:8+(i%3)*2});}
+const shop=new THREE.Group();scene.add(shop);shop.position.set(19,0,3);
+const shopBody=new THREE.Mesh(new THREE.BoxGeometry(9,5,7),mat(0xc9b28e));shopBody.position.y=2.5;shop.add(shopBody);
+const shopFront=new THREE.Mesh(new THREE.BoxGeometry(5,2.1,.12),mat(0x365a67));shopFront.position.set(0,2.3,3.58);shop.add(shopFront);
+const shopAwning=new THREE.Mesh(new THREE.BoxGeometry(6,.35,1.3),mat(0xa54a3d));shopAwning.position.set(0,3.7,4);shop.add(shopAwning);
+const shopSign=new THREE.Mesh(new THREE.BoxGeometry(5.4,.8,.2),mat(0x253c49));shopSign.position.set(0,4.5,3.62);shop.add(shopSign);
+const shopMarker=new THREE.Mesh(new THREE.TorusGeometry(.65,.09,8,24),rideGold);shopMarker.rotation.x=Math.PI/2;shopMarker.position.set(0,.12,4.6);shop.add(shopMarker);
+let dayClock=0,shopOpen=false;
+function interactWorld(){
+ const nearShop=player.position.distanceTo(shop.position)<13;
+ if(nearShop){shopOpen=!shopOpen;document.querySelector('#hint').textContent=shopOpen?'🛒 متجر وتين: طعام وماء وأدوات — قريباً ستتوفر عمليات الشراء':'أغلقت المتجر';return;}
+ const nearVisitor=player.position.distanceTo(visitor.position)<5;
+ if(nearVisitor){document.querySelector('#hint').textContent='أهلاً بك في وتين ستي!';return;}
+ document.querySelector('#hint').textContent='اقترب من المتجر أو أحد السكان للتفاعل';
+}
+const interactButton=document.querySelector('#interactBtn');
+if(interactButton)interactButton.addEventListener('click',interactWorld);
+addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e')interactWorld()});
+
 const clock=new THREE.Clock();const desired=new THREE.Vector3();let frame=0,walkPhase=0;
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);const forward=(keys.w||keys.arrowup?-1:0)+(keys.s||keys.arrowdown?1:0)-joy.y;const side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;const moving=Math.abs(forward)+Math.abs(side)>.08;const target=inCar?car:player;if(moving&&!inCar)walkPhase+=dt*(run?12:7);const speed=inCar?22:(run?10:5.2);if(moving){const angle=Math.atan2(side,-forward);target.rotation.y=angle+yaw;const dir=new THREE.Vector3(Math.sin(target.rotation.y),0,Math.cos(target.rotation.y));target.position.addScaledVector(dir,speed*dt*Math.min(1,Math.hypot(forward,side)));target.position.x=THREE.MathUtils.clamp(target.position.x,-285,285);target.position.z=THREE.MathUtils.clamp(target.position.z,-285,285)}if(inCar){player.position.copy(car.position);player.visible=false}else player.visible=true;const gait=moving&&!inCar?1:0;legPivots.forEach((p,i)=>{p.rotation.x=Math.sin(walkPhase+i*Math.PI)*.62*gait;p.rotation.z=0});armPivots.forEach((p,i)=>{p.rotation.x=-Math.sin(walkPhase+i*Math.PI)*.48*gait;p.rotation.z=(i===0?-.08:.08)});
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);dayClock=(dayClock+dt*.006)%(Math.PI*2);const daylight=.48+.42*Math.sin(dayClock-Math.PI/2);sun.intensity=1.1+daylight*2.1;scene.background.setHSL(.55,.22,.18+daylight*.32);scene.fog.color.copy(scene.background);wheelRing.rotation.z+=dt*.22;carouselRoof.rotation.y+=dt*.65;carouselBase.rotation.y+=dt*.65;for(let i=0;i<citizens.length;i++){const c=citizens[i];c.phase+=dt*c.speed;const p=c.npc.position;if(c.route<2){p.z=c.origin.z+Math.sin(c.phase)*11;p.x=c.origin.x+Math.cos(c.phase*.5)*2;}else{p.x=c.origin.x+Math.sin(c.phase)*11;p.z=c.origin.z+Math.cos(c.phase*.5)*2;}c.npc.rotation.y=c.route<2?(Math.cos(c.phase)>=0?0:Math.PI):(Math.cos(c.phase)>=0?Math.PI/2:-Math.PI/2);c.legs.forEach((leg,n)=>leg.rotation.x=Math.sin(c.phase*4+n*Math.PI)*.55);c.arms.forEach((arm,n)=>arm.rotation.x=-Math.sin(c.phase*4+n*Math.PI)*.35);}for(const trafficItem of traffic){const q=trafficItem.vehicle;trafficItem.progress=(trafficItem.progress+dt*trafficItem.speed/230)%1;const z=(trafficItem.progress-.5)*230;q.position.set(trafficItem.lane,.0,z);q.rotation.y=trafficItem.direction>0?0:Math.PI;}const coasterT=(dayClock*1.7)%(Math.PI*2);const coasterPoint=coasterPath.getPoint((coasterT/(Math.PI*2)));coasterCar.position.copy(coasterPoint);const forward=(keys.w||keys.arrowup?-1:0)+(keys.s||keys.arrowdown?1:0)-joy.y;const side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;const moving=Math.abs(forward)+Math.abs(side)>.08;const target=inCar?car:player;if(moving&&!inCar)walkPhase+=dt*(run?12:7);const speed=inCar?22:(run?10:5.2);if(moving){const angle=Math.atan2(side,-forward);target.rotation.y=angle+yaw;const dir=new THREE.Vector3(Math.sin(target.rotation.y),0,Math.cos(target.rotation.y));target.position.addScaledVector(dir,speed*dt*Math.min(1,Math.hypot(forward,side)));target.position.x=THREE.MathUtils.clamp(target.position.x,-285,285);target.position.z=THREE.MathUtils.clamp(target.position.z,-285,285)}if(inCar){player.position.copy(car.position);player.visible=false}else player.visible=true;const gait=moving&&!inCar?1:0;legPivots.forEach((p,i)=>{p.rotation.x=Math.sin(walkPhase+i*Math.PI)*.62*gait;p.rotation.z=0});armPivots.forEach((p,i)=>{p.rotation.x=-Math.sin(walkPhase+i*Math.PI)*.48*gait;p.rotation.z=(i===0?-.08:.08)});
 const focus=inCar?car:player;desired.set(focus.position.x+Math.sin(focus.rotation.y)*-10,focus.position.y+7,focus.position.z+Math.cos(focus.rotation.y)*-10);camera.position.lerp(desired,1-Math.exp(-4*dt));camera.lookAt(focus.position.x,focus.position.y+1.5,focus.position.z);
 frame+=dt;if(frame>5){frame=0;const d=Math.hypot(player.position.x,player.position.z);document.querySelector('#location').textContent=d<100?'وسط وتين':player.position.z<-180?'واجهة الميناء':'الأحياء الجديدة'}
 renderer.render(scene,camera)}
