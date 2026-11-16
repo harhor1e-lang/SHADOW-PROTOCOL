@@ -1,43 +1,38 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#101713" />
-    <meta name="description" content="SHADOW PROTOCOL — an evolving open-world life simulation." />
-    <title>SHADOW PROTOCOL</title>
-    <link rel="stylesheet" href="./src/style.css" />
-    <script type="importmap">
-      {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}
-    </script>
-  </head>
-  <body>
-    <div id="app">
-      <header class="topbar">
-        <a class="brand" href="#" aria-label="Shadow Protocol home">
-          <span class="brand-mark">SP</span>
-          <span><strong>SHADOW</strong><small>PROTOCOL</small></span>
-        </a>
-        <div class="world-status"><span class="status-dot"></span> WORLD SIMULATION <span id="clock">DAY 01 · 08:00</span></div>
-      </header>
-      <main>
-        <section class="intro">
-          <p class="eyebrow">A LIVING WORLD IN PROGRESS</p>
-          <h1>YOUR WORLD.<br /><em>YOUR LEGACY.</em></h1>
-          <p class="intro-copy">A new world is taking shape. Explore the first frontier of a persistent life simulation.</p>
-          <div class="intro-actions"><button id="enter-world" class="primary-button">ENTER THE WORLD <span>↗</span></button><span class="build-label">FOUNDATION BUILD · 0.1.0</span></div>
-        </section>
-        <div class="world-hint"><span class="hint-key">W A S D</span> MOVE <span class="hint-key">DRAG</span> LOOK <span class="hint-key">SCROLL</span> ZOOM</div>
-      </main>
-      <aside class="world-panel">
-        <div class="panel-heading"><span>FRONTIER REGION</span><span class="live-tag">LIVE SCENE</span></div>
-        <h2>THE OAKEN VALLEY</h2>
-        <p>A quiet river valley. The first settlement begins here.</p>
-        <div class="panel-stats"><div><small>ERA</small><strong>PRIMAL</strong></div><div><small>WEATHER</small><strong>CLEAR</strong></div><div><small>POPULATION</small><strong>—</strong></div></div>
-      </aside>
-      <div id="loading" class="loading-screen"><div class="loader-mark">SP</div><span>FORMING THE FRONTIER</span></div>
-      <div id="toast" class="toast" role="status"></div>
-    </div>
-    <script type="module" src="./src/main.js"></script>
-  </body>
-</html>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101713"><meta name="description" content="SHADOW PROTOCOL — a living open-world survival saga.">
+<title>SHADOW PROTOCOL — The First Age</title>
+<link rel="stylesheet" href="./src/style.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div id="app">
+<canvas id="world-canvas"></canvas>
+<div class="vignette"></div>
+<header class="topbar">
+ <a class="brand" href="#"><span class="brand-mark">SP</span><span><b>SHADOW</b><small>PROTOCOL</small></span></a>
+ <div class="world-status"><i></i><span>THE OAKEN FRONTIER</span><b id="world-clock">DAY 01 · 08:00</b></div>
+ <button class="icon-button" id="menu-toggle" aria-label="Open menu">☰</button>
+</header>
+<section class="hero" id="hero">
+ <div class="overline"><span></span> AN OPEN WORLD. A LIVING HISTORY.</div>
+ <h1>THE WORLD<br><em>REMEMBERS.</em></h1>
+ <p class="hero-copy">Beyond the last road, a new age begins. Build a home. Uncover what sleeps beneath the earth. Decide what survives the coming dark.</p>
+ <div class="hero-actions"><button id="begin" class="gold-button">ENTER THE FRONTIER <b>↗</b></button><span class="chapter">CHAPTER I <i>—</i> THE FIRST AGE</span></div>
+ <div class="hero-foot">NO PROPHECY WILL SAVE YOU. ONLY WHAT YOU BUILD.</div>
+</section>
+<aside class="region-card"><div class="region-top"><span>KNOWN TERRITORY</span><span class="live"><i></i> WORLD ALIVE</span></div><h2>OAKEN VALLEY</h2><p>A river cuts through ancient woodland. Smoke rises from the first settlement. Something watches from the tree line.</p><div class="region-data"><div><small>ERA</small><b>PRIMAL</b></div><div><small>WEATHER</small><b id="weather-label">MISTY</b></div><div><small>SETTLERS</small><b>07</b></div></div></aside>
+<div class="hud" id="hud">
+ <div class="hud-top"><div class="player-chip"><div class="avatar">W</div><div><b>THE WANDERER</b><small>UNBOUND · LEVEL 01</small></div></div><div class="vitals"><div><span>♥</span><i><b id="health-bar"></b></i><small>HEALTH</small></div><div><span>◆</span><i><b id="stamina-bar"></b></i><small>STAMINA</small></div><div><span>◈</span><i><b id="hunger-bar"></b></i><small>HUNGER</small></div></div></div>
+ <div class="hud-bottom"><div class="objective"><small>YOUR FIRST PURPOSE</small><b>Find the old watchfire</b><span>Explore the valley and discover its secrets.</span></div><div class="quick-actions"><button data-panel="inventory">BAG <small>I</small></button><button data-panel="map">MAP <small>M</small></button><button data-panel="journal">JOURNAL <small>J</small></button></div></div>
+</div>
+<div class="mobile-controls" id="mobile-controls"><button data-move="forward">▲</button><div><button data-move="left">◀</button><button data-move="back">▼</button><button data-move="right">▶</button></div></div>
+<div class="interact-prompt" id="interact-prompt"> <span>F</span> APPROACH THE OLD WATCHFIRE</div>
+<div class="side-panel" id="side-panel"><button class="panel-close" id="panel-close">×</button><small id="panel-kicker">FIELD NOTES</small><h2 id="panel-title">YOUR JOURNEY</h2><div id="panel-content"></div></div>
+<div class="toast" id="toast"></div>
+<div class="loading-screen" id="loading"><div class="loader-mark">SP</div><span>THE LAND IS WAKING</span><small>GENERATING THE FIRST FRONTIER</small></div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body></html>
