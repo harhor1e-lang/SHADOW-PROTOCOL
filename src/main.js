@@ -217,8 +217,8 @@ addCivicPlace('مصنع وتين لصناعة الطائرات','مصنع طائ
 // Hangar doors, assembly floor and a display aircraft with a complete visible airframe.
 const aircraftFactoryGroup=new THREE.Group();aircraftFactoryGroup.position.set(-315,0,-70);scene.add(aircraftFactoryGroup);
 const factoryPlace=civicPlaces.find(item=>item.name==='مصنع وتين لصناعة الطائرات');if(factoryPlace){scene.remove(factoryPlace.group);factoryPlace.group=aircraftFactoryGroup;}
-const hangar=new THREE.Mesh(new THREE.BoxGeometry(48,17,36),mat(0x697c85));hangar.position.set(0,8.5,-4);aircraftFactoryGroup.add(hangar);
-const hangarDoor=new THREE.Mesh(new THREE.BoxGeometry(25,12,.45),mat(0x263c49));hangarDoor.position.set(0,6,14.2);aircraftFactoryGroup.add(hangarDoor);
+const aircraftHangar=new THREE.Mesh(new THREE.BoxGeometry(48,17,36),mat(0x697c85));aircraftHangar.position.set(0,8.5,-4);aircraftFactoryGroup.add(aircraftHangar);
+const aircraftHangarDoor=new THREE.Mesh(new THREE.BoxGeometry(25,12,.45),mat(0x263c49));aircraftHangarDoor.position.set(0,6,14.2);aircraftFactoryGroup.add(aircraftHangarDoor);
 for(let x=-18;x<=18;x+=6){const rib=new THREE.Mesh(new THREE.BoxGeometry(.45,16,34),mat(0x9ba8aa));rib.position.set(x,8,-4);aircraftFactoryGroup.add(rib);}
 const factoryPlane=new THREE.Group();factoryPlane.position.set(0,2,-4);aircraftFactoryGroup.add(factoryPlane);
 const planeBody=new THREE.Mesh(new THREE.CylinderGeometry(.72,.92,13,12),mat(0xd7dcdf));planeBody.rotation.x=Math.PI/2;planeBody.position.y=2.1;factoryPlane.add(planeBody);
