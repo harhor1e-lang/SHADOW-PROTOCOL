@@ -6,33 +6,47 @@ function drawCompatibilityCity(error) {
   if(!host) return;
   host.innerHTML='';
   const canvas=document.createElement('canvas');
-  canvas.style.cssText='display:block;width:100%;height:100%;';
+  canvas.style.cssText='display:block;width:100%;height:100%;touch-action:none;';
   host.appendChild(canvas);
   const ctx=canvas.getContext('2d');
+  const loading=document.querySelector('#loading');
+  if(loading) loading.remove();
   if(!ctx) { host.innerHTML='<div style="color:white;padding:30px">تعذّر تشغيل الرسوم على هذا المتصفح.</div>'; return; }
-  function paint(){
-    const w=canvas.width= Math.max(1,Math.floor(host.clientWidth*devicePixelRatio));
-    const h=canvas.height= Math.max(1,Math.floor(host.clientHeight*devicePixelRatio));
-    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-    const W=host.clientWidth,H=host.clientHeight;
-    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#83b7d0');sky.addColorStop(.62,'#d6c8a2');sky.addColorStop(1,'#71875d');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-    const horizon=H*.57;ctx.fillStyle='#758b60';ctx.fillRect(0,horizon,W,H-horizon);
-    // Perspective road grid
-    ctx.fillStyle='#343d43';ctx.beginPath();ctx.moveTo(W*.43,horizon);ctx.lineTo(W*.57,horizon);ctx.lineTo(W*1.12,H);ctx.lineTo(-W*.12,H);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='#e5d7a8';ctx.lineWidth=3;ctx.setLineDash([18,20]);ctx.beginPath();ctx.moveTo(W*.5,horizon+5);ctx.lineTo(W*.5,H);ctx.stroke();ctx.setLineDash([]);
-    // Skyline and near buildings
-    const blocks=[];for(let i=0;i<15;i++){const x=(i/15)*W-W*.02;const depth=i%3;const bw=W*(.045+depth*.012);const bh=H*(.13+((i*37)%17)/100);blocks.push({x,y:horizon-bh,w:bw,h:bh,c:['#bda98d','#9daeb1','#d4c8b4','#8e9c9e'][i%4]});}
-    blocks.sort((a,b)=>a.y-b.y);
-    for(const b of blocks){ctx.fillStyle=b.c;ctx.fillRect(b.x,b.y,b.w,b.h);ctx.fillStyle='rgba(25,55,70,.75)';for(let yy=b.y+10;yy<b.y+b.h-5;yy+=17)for(let xx=b.x+6;xx<b.x+b.w-4;xx+=12)ctx.fillRect(xx,yy,6,9);ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(b.x+b.w-5,b.y,5,b.h);}
-    // Roadside foreground houses
-    for(let side=0;side<2;side++)for(let i=0;i<4;i++){const x=side?W*.68+i*W*.11:W*.2-i*W*.11;const y=horizon+H*(.04+i*.045);const bw=W*(.11+i*.018),bh=H*(.13+i*.035);ctx.fillStyle='#75665a';ctx.fillRect(x,y-bh,bw,bh);ctx.fillStyle='#c5b69c';ctx.beginPath();ctx.moveTo(x-5,y-bh);ctx.lineTo(x+bw/2,y-bh-H*.045);ctx.lineTo(x+bw+5,y-bh);ctx.closePath();ctx.fill();ctx.fillStyle='#395b69';for(let wx=x+10;wx<x+bw-8;wx+=22)ctx.fillRect(wx,y-bh+14,10,16);}
-    // Player and car silhouettes
-    ctx.fillStyle='#263d50';ctx.fillRect(W*.47,H*.68, W*.055,H*.11);ctx.fillStyle='#b98260';ctx.beginPath();ctx.arc(W*.497,H*.665,Math.max(6,W*.012),0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#a33d32';ctx.fillRect(W*.68,H*.78,W*.16,H*.07);ctx.fillStyle='#365568';ctx.fillRect(W*.71,H*.745,W*.09,H*.045);ctx.fillStyle='#15191c';ctx.beginPath();ctx.arc(W*.71,H*.85,7,0,Math.PI*2);ctx.arc(W*.81,H*.85,7,0,Math.PI*2);ctx.fill();
+  const state={x:0,y:0,walk:0,steer:0};
+  const keys={};
+  addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
+  addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+  let last=0;
+  function paint(t=0){
+    const W=Math.max(1,host.clientWidth),H=Math.max(1,host.clientHeight),dpr=Math.min(devicePixelRatio||1,1.5);
+    if(canvas.width!==Math.floor(W*dpr)||canvas.height!==Math.floor(H*dpr)){canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);}
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const dt=Math.min(.04,(t-last)/1000||.016);last=t;state.walk+=dt;
+    const horizon=H*.55;
+    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#6fa6c2');sky.addColorStop(.58,'#d8c7a1');sky.addColorStop(1,'#7d9168');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#e6bd79';ctx.beginPath();ctx.arc(W*.78,H*.17,Math.min(W,H)*.055,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#72875e';ctx.fillRect(0,horizon,W,H-horizon);
+    // Distant city skyline with warm windows
+    for(let i=0;i<19;i++){const bw=W*.045+(i%3)*W*.012,bh=H*(.12+((i*31)%19)/100),x=i*W/18-bw/2,y=horizon-bh;ctx.fillStyle=['#aab5b0','#c3b49d','#84999b','#d2c6ae'][i%4];ctx.fillRect(x,y,bw,bh);ctx.fillStyle='#526d78';for(let wy=y+8;wy<horizon-5;wy+=16)for(let wx=x+5;wx<x+bw-4;wx+=12)ctx.fillRect(wx,wy,5,7);}
+    // Sidewalks, shops and homes
+    for(let side=0;side<2;side++)for(let i=0;i<5;i++){const scale=.55+i*.13,bw=W*(.12+i*.025),bh=H*(.14+i*.025),x=side?W*.66+i*W*.105:W*.22-i*W*.105,y=horizon+H*(.045+i*.055);ctx.fillStyle='#6e6258';ctx.fillRect(x,y-bh,bw,bh);ctx.fillStyle='#c9b28e';ctx.beginPath();ctx.moveTo(x-5,y-bh);ctx.lineTo(x+bw/2,y-bh-H*.045);ctx.lineTo(x+bw+5,y-bh);ctx.fill();ctx.fillStyle='#315362';for(let wx=x+8;wx<x+bw-8;wx+=20){ctx.fillRect(wx,y-bh+12,10,15);ctx.fillStyle='#e8c17b';ctx.fillRect(wx+3,y-bh+15,3,8);ctx.fillStyle='#315362';}ctx.fillStyle='#58483b';ctx.fillRect(x+bw*.42,y-25*scale,bw*.18,25*scale);}
+    // Perspective street and sidewalks
+    ctx.fillStyle='#b4a58d';ctx.beginPath();ctx.moveTo(W*.39,horizon);ctx.lineTo(W*.61,horizon);ctx.lineTo(W*1.15,H);ctx.lineTo(-W*.15,H);ctx.fill();
+    ctx.fillStyle='#343c42';ctx.beginPath();ctx.moveTo(W*.44,horizon);ctx.lineTo(W*.56,horizon);ctx.lineTo(W*1.04,H);ctx.lineTo(-W*.04,H);ctx.fill();
+    ctx.strokeStyle='#e7d9a8';ctx.lineWidth=3;ctx.setLineDash([18,22]);ctx.beginPath();ctx.moveTo(W*.5,horizon+4);ctx.lineTo(W*.5,H);ctx.stroke();ctx.setLineDash([]);
+    // Moving cars, pedestrians and a lively neighborhood
+    for(let i=0;i<4;i++){const z=((t*.000025*(i%2?1:-1)+i*.27)%1+1)%1;const y=horizon+Math.pow(z,1.6)*(H-horizon);const x=W*(.5+(i%2?-.17:.17)*z);const cw=10+z*W*.09,ch=5+z*H*.045;ctx.fillStyle=['#a83e32','#d5d0c4','#315d78','#d5a347'][i];ctx.fillRect(x-cw/2,y-ch,cw,ch);ctx.fillStyle='#9fc1ca';ctx.fillRect(x-cw*.28,y-ch*.8,cw*.56,ch*.35);ctx.fillStyle='#15191c';ctx.beginPath();ctx.arc(x-cw*.3,y,Math.max(2,z*5),0,Math.PI*2);ctx.arc(x+cw*.3,y,Math.max(2,z*5),0,Math.PI*2);ctx.fill();}
+    for(let i=0;i<8;i++){const z=((i*.137+t*.000018)%1),y=horizon+Math.pow(z,1.7)*(H-horizon),x=W*(.28+(i%4)*.14)+(Math.sin(t*.001+i)*W*.006),s=.35+z*1.1;ctx.fillStyle=i%2?'#263d50':'#6b4436';ctx.fillRect(x-3*s,y-15*s,6*s,13*s);ctx.fillStyle='#b98260';ctx.beginPath();ctx.arc(x,y-18*s,4*s,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#263d50';ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(x,y-7*s);ctx.lineTo(x-4*s,y+2*s);ctx.moveTo(x,y-7*s);ctx.lineTo(x+4*s,y+2*s);ctx.stroke();}
+    // Player silhouette responds to keyboard/touch
+    const px=W*.5+state.x*W*.12,py=H*.73+state.y*H*.04;
+    ctx.fillStyle='#172b3a';ctx.fillRect(px-10,py-22,20,26);ctx.fillStyle='#b98260';ctx.beginPath();ctx.arc(px,py-29,9,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#172b3a';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(px-5,py+2);ctx.lineTo(px-8+Math.sin(state.walk*8)*4,py+15);ctx.moveTo(px+5,py+2);ctx.lineTo(px+8-Math.sin(state.walk*8)*4,py+15);ctx.stroke();
+    requestAnimationFrame(paint);
   }
-  paint();addEventListener('resize',paint,{passive:true});
-  const msg=document.createElement('div');msg.textContent='وضع التوافق: تم تشغيل عرض المدينة البديل';msg.style.cssText='position:absolute;bottom:12px;right:12px;background:#101820d9;color:#fff;padding:8px 12px;border-radius:10px;font:12px Tahoma;';host.appendChild(msg);
-  console.error('Wateen City WebGL fallback:',error);
+  const area=document.querySelector('#stickArea'),stick=document.querySelector('#stick');let pointer=null;
+  if(area&&stick){area.addEventListener('pointerdown',e=>{pointer=e.pointerId;area.setPointerCapture(pointer);move(e)});area.addEventListener('pointermove',e=>{if(e.pointerId===pointer)move(e)});function move(e){const r=area.getBoundingClientRect();let dx=(e.clientX-r.left-r.width/2)/r.width*2,dy=(e.clientY-r.top-r.height/2)/r.height*2;state.x=Math.max(-1,Math.min(1,dx));state.y=Math.max(-1,Math.min(1,dy));stick.style.transform='translate('+state.x*34+'px,'+state.y*34+'px)';}function reset(){pointer=null;state.x=0;state.y=0;stick.style.transform='translate(0,0)'}area.addEventListener('pointerup',reset);area.addEventListener('pointercancel',reset);}
+  paint();
+  const msg=document.createElement('div');msg.textContent='وضع الرسوم المتوافق يعمل — المدينة تتحرك';msg.style.cssText='position:absolute;bottom:12px;right:12px;background:#101820d9;color:#fff;padding:8px 12px;border-radius:10px;font:12px Tahoma;';host.appendChild(msg);
+  console.error('Wateen City compatibility renderer:',error);
 }
 
 try {
