@@ -118,13 +118,13 @@ const buildCatalog={
 };
 function placeBuild(kind,x,z,rot=0,restoring=false){
  const item=buildCatalog[kind];if(!item)return null;
- const g=new THREE.Group(),wood=mat(0x765033),plank=mat(0x9a7046),stone=mat(0x77786b),cloth=mat(0x687b70),metal=mat(0x554638);
+ const g=new THREE.Group(),wood=mat(0x765033),plank=mat(0x9a7046),stone=mat(0x77786b),cloth=mat(0x687b70),metal=mat(0x554638),colliderRefs=[];
  const box=(w,h,d,px,py,pz,material)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(px,py,pz);o.castShadow=true;o.receiveShadow=true;g.add(o);return o};
  if(kind==='house'){const h=house(x,z,1);builtObjects.push({kind,x,z,rot,mesh:h});return h}
- if(kind==='wall'||kind==='stonewall'){box(4,2.8,.22,0,1.4,0,kind==='wall'?plank:stone);if(kind==='wall')for(let y=.35;y<2.8;y+=.55)box(4.02,.07,.25,0,y,0,wood);addCollider(x,z,2,.16,.35)}
+ if(kind==='wall'||kind==='stonewall'){box(4,2.8,.22,0,1.4,0,kind==='wall'?plank:stone);if(kind==='wall')for(let y=.35;y<2.8;y+=.55)box(4.02,.07,.25,0,y,0,wood);colliderRefs.push(addCollider(x,z,2,.16,.35))}
  if(kind==='floor'){box(4,.18,4,0,.12,0,wood);for(let i=-1.5;i<=1.5;i+=.5)box(.035,.19,4,i,.13,0,plank)}
  if(kind==='roof'){const roof=box(4.3,.2,4,0,2.8,0,wood);roof.rotation.x=-.28;for(let i=-1.5;i<=1.5;i+=.5){const beam=box(.09,.24,4.2,i,2.9,0,plank);beam.rotation.x=-.28}}
- if(kind==='door'){box(1.65,2.5,.16,0,1.25,0,wood);for(let y=.25;y<2.5;y+=.48)box(1.62,.06,.19,0,y,0,plank);const knob=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),mat(0xc49a48));knob.position.set(.58,1.2,.13);g.add(knob);addCollider(x,z,.85,.15,.25)}
+ if(kind==='door'){box(1.65,2.5,.16,0,1.25,0,wood);for(let y=.25;y<2.5;y+=.48)box(1.62,.06,.19,0,y,0,plank);const knob=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8),mat(0xc49a48));knob.position.set(.58,1.2,.13);g.add(knob);colliderRefs.push(addCollider(x,z,.85,.15,.25))}
  if(kind==='window'){box(1.5,1.25,.15,0,1.5,0,wood);const glass=new THREE.Mesh(new THREE.BoxGeometry(1.25,1,.08),new THREE.MeshStandardMaterial({color:0x91c5c7,transparent:true,opacity:.48}));glass.position.set(0,1.5,.08);g.add(glass);box(.08,1.1,.18,0,1.5,.12,plank);box(1.35,.08,.18,0,1.5,.12,plank)}
  if(kind==='bed'){box(1.5,.25,2.2,0,.25,0,wood);box(1.35,.2,2.05,0,.46,0,mat(0xd8cdb6));box(1.35,.12,1.1,0,.62,.4,cloth);box(.95,.14,.42,0,.62,-.72,mat(0xe9dfcb));box(1.5,.8,.14,0,.55,-1.05,wood);for(const a of [-.58,.58])for(const b of [-.9,.9])box(.13,.42,.13,a,.04,b,wood);sleepingBeds.push({mesh:g,house:null,x,z,scale:1,world:new THREE.Vector3(x,height(x,z),z)})}
  if(kind==='chest'){box(1.35,.8,.9,0,.48,0,wood);box(1.4,.16,.95,0,.94,0,plank);box(.12,.25,.08,0,.72,.49,metal)}
@@ -132,7 +132,19 @@ function placeBuild(kind,x,z,rot=0,restoring=false){
  if(kind==='fence'){box(4,.13,.14,0,.7,0,wood);box(4,.13,.14,0,1.25,0,wood);for(let a=-1.8;a<=1.8;a+=.6)box(.12,1.5,.16,a,.75,0,plank);addCollider(x,z,2,.15,.2)}
  if(kind==='torch'){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.1,1.8,7),wood);pole.position.y=.9;g.add(pole);const flame=new THREE.Mesh(new THREE.ConeGeometry(.22,.65,7),new THREE.MeshBasicMaterial({color:0xff9a36}));flame.position.y=2;g.add(flame);const light=new THREE.PointLight(0xff9b48,1.1,9);light.position.y=2;g.add(light)}
  if(kind==='farm'){box(2.5,.22,2,0,.15,0,wood);box(2.2,.12,1.7,0,.3,0,mat(0x59472d));for(let a=-.7;a<=.7;a+=.7){const crop=new THREE.Mesh(new THREE.ConeGeometry(.16,.65,5),mat(0x6f8b42));crop.position.set(a,.68,0);g.add(crop)}}
- g.position.set(x,height(x,z),z);g.rotation.y=rot;scene.add(g);builtObjects.push({kind,x,z,rot,mesh:g});return g
+ g.position.set(x,height(x,z),z);g.rotation.y=rot;scene.add(g);builtObjects.push({kind,x,z,rot,mesh:g,colliders:colliderRefs});return g
+}
+function dismantleNearest(){
+ let best=null,dist=7;
+ for(const item of builtObjects){const d=Math.hypot(target.x-item.x,target.z-item.z);if(d<dist){best=item;dist=d}}
+ if(!best){toast('اقترب من قطعة بنيتها حتى تفككها.');return}
+ scene.remove(best.mesh);
+ for(const c of best.colliders||[]){const minX=Math.floor((c.x-c.hx-c.r)/collisionCell),maxX=Math.floor((c.x+c.hx+c.r)/collisionCell),minZ=Math.floor((c.z-c.hz-c.r)/collisionCell),maxZ=Math.floor((c.z+c.hz+c.r)/collisionCell);for(let gx=minX;gx<=maxX;gx++)for(let gz=minZ;gz<=maxZ;gz++){const key=gx+','+gz,list=collisionGrid.get(key);if(list){const i=list.indexOf(c);if(i>=0)list.splice(i,1);if(!list.length)collisionGrid.delete(key)}}}
+ const saved=game.placedBuilds.findIndex(p=>p.kind===best.kind&&Math.abs(p.x-best.x)<.01&&Math.abs(p.z-best.z)<.01);
+ if(saved>=0)game.placedBuilds.splice(saved,1);
+ const cost=buildCatalog[best.kind];if(cost){game.wood+=Math.floor(cost.wood*.5);game.stone+=Math.floor(cost.stone*.5)}
+ const idx=builtObjects.indexOf(best);if(idx>=0)builtObjects.splice(idx,1);
+ saveGame();toast('فككت '+(cost?.name||'قطعة البناء')+' واسترجعت نصف مواده.');openPanel('build')
 }
 function buildAt(kind){
  const item=buildCatalog[kind];if(!item)return;
@@ -327,7 +339,7 @@ if(which==='map'){kicker='دليل الرحّالة';title='خريطة الأق�
 if(which==='journal'){kicker='ملاحظات ميدانية';title='سجل الرحلة';body='<p>الوادي هادئ، لكنه ليس خالياً. آثار غريبة تظهر قرب الأشجار بعد الغروب.</p><p><b>المهمة الحالية:</b> '+(game.quest===0?'اكتشف موقد الحراسة':game.quest===1?'اجمع ٣ قطع خشب وحجراً واحداً':'عد إلى المستوطنة وابدأ بناء مأوى')+'</p><p>المستوى '+game.level+' · الخبرة '+game.xp+'</p>'}
 if(which==='craft'){kicker='ورشة الصانع';title='الصناعة البدائية';body='<p>حوّل الموارد إلى أدوات تساعدك على البقاء.</p>'+panelButton('صناعة فأس بدائي · ٣ خشب + ٢ حجر','axe')+panelButton('صناعة ضماد · عشب واحد','bandage')+panelButton('تحضير وجبة · طعامان','meal')+panelButton('صناعة رمح خشبي · ٢ خشب','spear')}
 if(which==='market'){kicker='سوق المستوطنة';title='تجارة الوادي';body='<p>تاجر المستوطنة يشتري الموارد ويبيع المؤن.</p>'+panelButton('شراء طعام · ٣ عملات','buyfood')+panelButton('شراء ماء · ٢ عملة','buywater')+panelButton('بيع ٢ خشب · ٤ عملات','sellwood')+panelButton('بيع الأعشاب · ٣ عملات','sellherbs')}
-if(which==='build'){kicker='ورشة البناء الحرة';title='ابنِ عالمك بيدك';body='<p>اختر قطعة البناء؛ ستوضع أمام شخصيتك على أقرب شبكة مناسبة. الموارد تُخصم ويُحفظ كل ما تبنيه.</p><div class="build-resources">الخشب: <b>'+game.wood+'</b> · الحجر: <b>'+game.stone+'</b></div><div class="build-grid">'+Object.entries(buildCatalog).map(([key,v])=>'<button class="build-piece" data-action="place-'+key+'"><b>'+v.name+'</b><small>خشب '+v.wood+' · حجر '+v.stone+'</small></button>').join('')+'</div>'+panelButton('إشعال موقد نار · ٢ خشب + حجر','camp')+panelButton('ترقية المأوى · ٤ خشب','upgrade')}
+if(which==='build'){kicker='ورشة البناء الحرة';title='ابنِ عالمك بيدك';body='<p>اختر قطعة البناء؛ ستوضع أمام شخصيتك على أقرب شبكة مناسبة. الموارد تُخصم ويُحفظ كل ما تبنيه.</p><div class="build-resources">الخشب: <b>'+game.wood+'</b> · الحجر: <b>'+game.stone+'</b></div><div class="build-grid">'+Object.entries(buildCatalog).map(([key,v])=>'<button class="build-piece" data-action="place-'+key+'"><b>'+v.name+'</b><small>خشب '+v.wood+' · حجر '+v.stone+'</small></button>').join('')+'</div>'+panelButton('إشعال موقد نار · ٢ خشب + حجر','camp')+panelButton('تدوير القطعة التالية ٩٠°','rotate-build')+panelButton('تفكيك أقرب قطعة واسترجاع نصف المواد','dismantle-build')+panelButton('ترقية المأوى · ٤ خشب','upgrade')}
 if(which==='people'){kicker='أهل المستوطنة';title='وجوه الوادي';body=villagers.map(v=>'<div class="person-card"><b>'+v.name+'</b><span>'+v.job+'</span><small>يقيم في المستوطنة · يتجول خلال النهار</small></div>').join('')+'<p>الحياة الاجتماعية ستتوسع مع تطور المستوطنة والعلاقات والمهن.</p>'}
 if(which==='skills'){kicker='تطور الشخصية';title='مهارات البقاء';body='<div class="stat-grid"><div>المستوى <b>'+game.level+'</b></div><div>الخبرة <b>'+game.xp+'</b></div><div>الاكتشاف <b>'+game.discovered+'</b></div><div>الصحة <b>'+Math.round(game.health)+'٪</b></div></div><p>اجمع الموارد، اصنع الأدوات، واستكشف المناطق لزيادة خبرتك.</p>'+panelButton('تأمل واسترح · استعد بعض الطاقة','rest')}
 $('#panel-kicker').textContent=kicker;$('#panel-title').textContent=title;$('#panel-content').innerHTML=body;$('#side-panel').classList.add('open')}
@@ -337,6 +349,7 @@ if(action.startsWith('open-')){const dest=action.slice(5);openPanel(dest);return
 if(action==='sleep'){sleepUntilMorning();return}
  if(action==='rotate-build'){game.buildRotation=((game.buildRotation||0)+Math.PI/2)%(Math.PI*2);saveGame();openPanel('build');toast('تم تدوير قطعة البناء.');return}
  if(action.startsWith('place-')){buildAt(action.slice(6));return}
+ if(action==='dismantle-build'){dismantleNearest();return}
 if(action==='axe'){if(game.wood<3||game.stone<2)return fail('خشب ٣ وحجر ٢');game.wood-=3;game.stone-=2;game.xp+=15;toast('صنعت فأساً بدائياً.')}
 if(action==='bandage'){if(game.herbs<1)return fail('عشب واحد');game.herbs--;game.health=Math.min(100,game.health+25);toast('استخدمت ضماداً واستعدت الصحة.')}
 if(action==='meal'){if(game.food<2)return fail('طعامان');game.food-=2;game.hunger=Math.min(100,game.hunger+35);toast('أعددت وجبة دافئة.')}
