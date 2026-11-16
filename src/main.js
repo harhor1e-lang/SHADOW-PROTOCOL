@@ -232,8 +232,11 @@ const shopMarker=new THREE.Mesh(new THREE.TorusGeometry(.65,.09,8,24),rideGold);
 let dayClock=0,shopOpen=false;
 
 // First playable economy loop: wallet, stock, work shift and home rest.
+const SAVE_KEY='wateen-city-save-v1';
 let wallet=2500,foodStock=0,waterStock=0,workShift=0,restCount=0;
-function refreshWallet(){const el=document.querySelector('#money');if(el)el.textContent=wallet.toLocaleString('ar-IQ');}
+try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(saved&&saved.version===1){wallet=Math.max(0,Number(saved.wallet)||2500);foodStock=Math.max(0,Number(saved.foodStock)||0);waterStock=Math.max(0,Number(saved.waterStock)||0);workShift=saved.workShift?1:0;restCount=Math.max(0,Number(saved.restCount)||0);}}catch(e){console.warn('تعذر تحميل الحفظ المحلي',e);}
+function saveProgress(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,wallet,foodStock,waterStock,workShift,restCount,savedAt:Date.now()}));}catch(e){console.warn('تعذر حفظ التقدم',e);}}
+function refreshWallet(){const el=document.querySelector('#money');if(el)el.textContent=wallet.toLocaleString('ar-IQ');const inv=document.querySelector('#inventory');if(inv)inv.textContent='طعام '+foodStock+' · ماء '+waterStock;saveProgress();}
 const economyPanel=document.createElement('section');
 economyPanel.id='economyPanel';
 economyPanel.dir='rtl';
@@ -256,8 +259,8 @@ const workMarker=makeWorldMarker(workPoint,0x65c7a1,'عمل');
 const homeMarker=makeWorldMarker(homePoint,0x7bb8e8,'منزل');
 
 function startWork(){if(workShift){document.querySelector('#hint').textContent='أنت تعمل بالفعل، أكمل جولتك';return;}workShift=1;showEconomy('مكتب العمل','بدأت ورديتك. أكمل مهامك اليومية ثم عد لاستلام الراتب.',[{label:'إنهاء الوردية + 350',run:()=>{wallet+=350;workShift=0;refreshWallet();economyPanel.style.display='none';document.querySelector('#hint').textContent='استلمت راتبك: ٣٥٠ ديناراً تجريبياً';}}]);}
-function openShop(){showEconomy('متجر وتين','رصيدك: '+wallet.toLocaleString('ar-IQ')+' دينار تجريبي. اختر احتياجاتك.',[{label:'شراء طعام - 50',run:()=>{if(wallet<50)return;wallet-=50;foodStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الطعام. الكمية: '+foodStock;}},{label:'شراء ماء - 20',run:()=>{if(wallet<20)return;wallet-=20;waterStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الماء. الكمية: '+waterStock;}},{label:'تناول الطعام',run:()=>{if(!foodStock)return;foodStock--;const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';document.querySelector('#economyInfo').textContent='تناولت الطعام واستعدت عافيتك.';}},{label:'شرب الماء',run:()=>{if(!waterStock)return;waterStock--;document.querySelector('#economyInfo').textContent='شربت الماء. بالتوفيق في جولتك!';}}]);}
-function restAtHome(){restCount++;const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';showEconomy('المنزل','استرحت في منزلك وعادت صحتك بالكامل. عدد مرات الراحة: '+restCount,[{label:'متابعة اللعب',run:()=>economyPanel.style.display='none'}]);}
+function openShop(){showEconomy('متجر وتين','رصيدك: '+wallet.toLocaleString('ar-IQ')+' دينار تجريبي. اختر احتياجاتك.',[{label:'شراء طعام - 50',run:()=>{if(wallet<50)return;wallet-=50;foodStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الطعام. الكمية: '+foodStock;}},{label:'شراء ماء - 20',run:()=>{if(wallet<20)return;wallet-=20;waterStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الماء. الكمية: '+waterStock;}},{label:'تناول الطعام',run:()=>{if(!foodStock)return;foodStock--;refreshWallet();const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';document.querySelector('#economyInfo').textContent='تناولت الطعام واستعدت عافيتك.';}},{label:'شرب الماء',run:()=>{if(!waterStock)return;waterStock--;refreshWallet();document.querySelector('#economyInfo').textContent='شربت الماء. بالتوفيق في جولتك!';}}]);}
+function restAtHome(){restCount++;saveProgress();const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';showEconomy('المنزل','استرحت في منزلك وعادت صحتك بالكامل. عدد مرات الراحة: '+restCount,[{label:'متابعة اللعب',run:()=>economyPanel.style.display='none'}]);}
 refreshWallet();
 function interactWorld(){
  const nearShop=player.position.distanceTo(shop.position)<13;
