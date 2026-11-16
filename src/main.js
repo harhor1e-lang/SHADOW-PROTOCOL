@@ -39,7 +39,27 @@ try {
 
 const mount=document.querySelector('#game');
 const introButton=document.querySelector('#startGameBtn');
-if(introButton) introButton.addEventListener('click',()=>document.querySelector('#introScreen')?.classList.add('closed'));
+
+const installButton=document.querySelector('#installAppBtn');
+let installPrompt=null;
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;if(installButton)installButton.hidden=false;});
+if(installButton)installButton.addEventListener('click',async()=>{
+ if(!installPrompt){document.querySelector('#hint').textContent='من قائمة المتصفح اختر: إضافة إلى الشاشة الرئيسية';return;}
+ installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installButton.hidden=true;
+});
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+ window.addEventListener('load',()=>navigator.serviceWorker.register(import.meta.env.BASE_URL+'sw.js').catch(err=>console.warn('تعذر تسجيل وضع التطبيق:',err)));
+}
+function updateOrientationLayout(){document.body.classList.toggle('portrait-mode',innerHeight>innerWidth);}
+updateOrientationLayout();
+window.addEventListener('resize',updateOrientationLayout,{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(updateOrientationLayout,180),{passive:true});
+if(introButton)introButton.addEventListener('click',async()=>{
+ try{if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();}catch(e){}
+ try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape');}catch(e){}
+ document.querySelector('#introScreen')?.classList.add('closed');
+ updateOrientationLayout();
+});
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x9bc2d0);
@@ -169,5 +189,7 @@ const focus=inCar?car:player;desired.set(focus.position.x+Math.sin(focus.rotatio
 frame+=dt;if(frame>5){frame=0;const d=Math.hypot(player.position.x,player.position.z);document.querySelector('#location').textContent=d<100?'وسط وتين':player.position.z<-180?'واجهة الميناء':'الأحياء الجديدة'}
 renderer.render(scene,camera)}
 camera.position.set(0,8,32);camera.lookAt(0,1,18);document.querySelector('#loading').style.opacity='0';setTimeout(()=>document.querySelector('#loading').remove(),550);animate();
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7))});
+function resizeGame(){const w=Math.max(1,document.documentElement.clientWidth),h=Math.max(1,document.documentElement.clientHeight);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7))}
+addEventListener('resize',resizeGame,{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(resizeGame,180),{passive:true});
 } catch (error) { drawCompatibilityCity(error); }
