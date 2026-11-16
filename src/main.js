@@ -1,6 +1,42 @@
 import './style.css';
 import * as THREE from 'three';
 
+function drawCompatibilityCity(error) {
+  const host=document.querySelector('#game');
+  if(!host) return;
+  host.innerHTML='';
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='display:block;width:100%;height:100%;';
+  host.appendChild(canvas);
+  const ctx=canvas.getContext('2d');
+  if(!ctx) { host.innerHTML='<div style="color:white;padding:30px">تعذّر تشغيل الرسوم على هذا المتصفح.</div>'; return; }
+  function paint(){
+    const w=canvas.width= Math.max(1,Math.floor(host.clientWidth*devicePixelRatio));
+    const h=canvas.height= Math.max(1,Math.floor(host.clientHeight*devicePixelRatio));
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    const W=host.clientWidth,H=host.clientHeight;
+    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#83b7d0');sky.addColorStop(.62,'#d6c8a2');sky.addColorStop(1,'#71875d');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    const horizon=H*.57;ctx.fillStyle='#758b60';ctx.fillRect(0,horizon,W,H-horizon);
+    // Perspective road grid
+    ctx.fillStyle='#343d43';ctx.beginPath();ctx.moveTo(W*.43,horizon);ctx.lineTo(W*.57,horizon);ctx.lineTo(W*1.12,H);ctx.lineTo(-W*.12,H);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#e5d7a8';ctx.lineWidth=3;ctx.setLineDash([18,20]);ctx.beginPath();ctx.moveTo(W*.5,horizon+5);ctx.lineTo(W*.5,H);ctx.stroke();ctx.setLineDash([]);
+    // Skyline and near buildings
+    const blocks=[];for(let i=0;i<15;i++){const x=(i/15)*W-W*.02;const depth=i%3;const bw=W*(.045+depth*.012);const bh=H*(.13+((i*37)%17)/100);blocks.push({x,y:horizon-bh,w:bw,h:bh,c:['#bda98d','#9daeb1','#d4c8b4','#8e9c9e'][i%4]});}
+    blocks.sort((a,b)=>a.y-b.y);
+    for(const b of blocks){ctx.fillStyle=b.c;ctx.fillRect(b.x,b.y,b.w,b.h);ctx.fillStyle='rgba(25,55,70,.75)';for(let yy=b.y+10;yy<b.y+b.h-5;yy+=17)for(let xx=b.x+6;xx<b.x+b.w-4;xx+=12)ctx.fillRect(xx,yy,6,9);ctx.fillStyle='rgba(0,0,0,.15)';ctx.fillRect(b.x+b.w-5,b.y,5,b.h);}
+    // Roadside foreground houses
+    for(let side=0;side<2;side++)for(let i=0;i<4;i++){const x=side?W*.68+i*W*.11:W*.2-i*W*.11;const y=horizon+H*(.04+i*.045);const bw=W*(.11+i*.018),bh=H*(.13+i*.035);ctx.fillStyle='#75665a';ctx.fillRect(x,y-bh,bw,bh);ctx.fillStyle='#c5b69c';ctx.beginPath();ctx.moveTo(x-5,y-bh);ctx.lineTo(x+bw/2,y-bh-H*.045);ctx.lineTo(x+bw+5,y-bh);ctx.closePath();ctx.fill();ctx.fillStyle='#395b69';for(let wx=x+10;wx<x+bw-8;wx+=22)ctx.fillRect(wx,y-bh+14,10,16);}
+    // Player and car silhouettes
+    ctx.fillStyle='#263d50';ctx.fillRect(W*.47,H*.68, W*.055,H*.11);ctx.fillStyle='#b98260';ctx.beginPath();ctx.arc(W*.497,H*.665,Math.max(6,W*.012),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#a33d32';ctx.fillRect(W*.68,H*.78,W*.16,H*.07);ctx.fillStyle='#365568';ctx.fillRect(W*.71,H*.745,W*.09,H*.045);ctx.fillStyle='#15191c';ctx.beginPath();ctx.arc(W*.71,H*.85,7,0,Math.PI*2);ctx.arc(W*.81,H*.85,7,0,Math.PI*2);ctx.fill();
+  }
+  paint();addEventListener('resize',paint,{passive:true});
+  const msg=document.createElement('div');msg.textContent='وضع التوافق: تم تشغيل عرض المدينة البديل';msg.style.cssText='position:absolute;bottom:12px;right:12px;background:#101820d9;color:#fff;padding:8px 12px;border-radius:10px;font:12px Tahoma;';host.appendChild(msg);
+  console.error('Wateen City WebGL fallback:',error);
+}
+
+try {
+
 const mount=document.querySelector('#game');
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x9bc2d0);
@@ -58,3 +94,4 @@ frame+=dt;if(frame>5){frame=0;const d=Math.hypot(player.position.x,player.positi
 renderer.render(scene,camera)}
 camera.position.set(0,8,32);camera.lookAt(0,1,18);document.querySelector('#loading').style.opacity='0';setTimeout(()=>document.querySelector('#loading').remove(),550);animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7))});
+} catch (error) { drawCompatibilityCity(error); }
