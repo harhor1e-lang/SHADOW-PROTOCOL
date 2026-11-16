@@ -8,10 +8,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="وتين ستي" />
-  <link rel="manifest" href="/SHADOW-PROTOCOL/manifest.webmanifest" />
-  <link rel="icon" href="/SHADOW-PROTOCOL/icons/icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
   <meta name="description" content="وتين ستي: عالم مفتوح ثلاثي الأبعاد للهاتف، باللغة العربية" />
   <title>وتين ستي | عالم مفتوح عربي</title>
+  <link rel="stylesheet" href="./src/style.css" />
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
   <style>html,body,#app{margin:0;width:100%;height:100%;min-height:100%;background:#101820;color:#fff;font-family:Tahoma,Arial,sans-serif}body{overflow:hidden}#game{position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(#83b7d0,#71875d)}.intro-screen{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:linear-gradient(115deg,#050d16,#0a1e2a 55%,#1f2a2a);color:#fff;text-align:center}.intro-content{width:min(88%,520px);padding:24px}.intro-emblem{margin:0 auto 14px;width:68px;height:68px;border:1px solid #e5b65d;border-radius:22px;display:grid;place-items:center;color:#f2c36c;font-size:42px}.intro-content h1{font-size:clamp(42px,12vw,76px);margin:0}.intro-content h1 span{color:#e8b75d}.intro-description{line-height:1.9;color:#d5dce0}.start-game{border:0;border-radius:14px;padding:15px 30px;background:linear-gradient(110deg,#f0c879,#b77a32);color:#17202a;font:bold 16px Tahoma}.intro-footer{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;padding:0 20px;color:#d6b36e;font-size:10px}.intro-screen.closed{opacity:0;visibility:hidden;pointer-events:none}.rotate-notice{display:none}</style>
 <style>
 #introCinematic{position:absolute;inset:0;width:100%;height:100%;z-index:0}
@@ -63,6 +65,9 @@ for(let i=0;i<5;i++){const p=(t*.025+i*.22)%1,y=H*.59+p*p*H*.42,cw=12+p*W*.08,ch
 for(let i=0;i<9;i++){const p=(i*.12+t*.008)%1,y=H*.64+p*p*H*.33,bx=W*(.22+(i%5)*.13)+Math.sin(t+i)*5,s=.4+p*.8;x.fillStyle='#1d3440';x.fillRect(bx-3*s,y-17*s,6*s,15*s);x.fillStyle='#b98260';x.beginPath();x.arc(bx,y-21*s,4*s,0,7);x.fill();}
 requestAnimationFrame(draw)}draw()})();
 </script>
-  <script type="module" src="/src/main.js"></script>
+  <script>
+(()=>{const b=document.getElementById("startGameBtn"),intro=document.getElementById("introScreen");if(!b||!intro)return;b.dataset.introBound="1";b.addEventListener("click",async()=>{b.disabled=true;b.textContent="جاري دخول المدينة...";try{if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch(e){}try{if(screen.orientation?.lock)await screen.orientation.lock("landscape")}catch(e){}intro.classList.add("closed");document.body.classList.add("game-started");setTimeout(()=>{intro.hidden=true},950);});})();
+</script>
+<script type="module" src="./src/main.js"></script>
 </body>
 </html>
