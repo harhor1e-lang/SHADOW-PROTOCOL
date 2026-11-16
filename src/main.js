@@ -230,12 +230,32 @@ const shopAwning=new THREE.Mesh(new THREE.BoxGeometry(6,.35,1.3),mat(0xa54a3d));
 const shopSign=new THREE.Mesh(new THREE.BoxGeometry(5.4,.8,.2),mat(0x253c49));shopSign.position.set(0,4.5,3.62);shop.add(shopSign);
 const shopMarker=new THREE.Mesh(new THREE.TorusGeometry(.65,.09,8,24),rideGold);shopMarker.rotation.x=Math.PI/2;shopMarker.position.set(0,.12,4.6);shop.add(shopMarker);
 let dayClock=0,shopOpen=false;
+
+// First playable economy loop: wallet, stock, work shift and home rest.
+let wallet=2500,foodStock=0,waterStock=0,workShift=0,restCount=0;
+function refreshWallet(){const el=document.querySelector('#money');if(el)el.textContent=wallet.toLocaleString('ar-IQ');}
+const economyPanel=document.createElement('section');
+economyPanel.id='economyPanel';
+economyPanel.dir='rtl';
+economyPanel.style.cssText='display:none;position:absolute;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,360px);padding:18px;background:#101d2af2;border:1px solid #e3b45f;border-radius:18px;box-shadow:0 16px 50px #0009;color:#fff;font:13px Tahoma;backdrop-filter:blur(12px);';
+economyPanel.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><strong id="economyTitle" style="color:#f0c879;font-size:17px">خدمات وتين</strong><button id="economyClose" style="background:#ffffff18;color:white;border:0;border-radius:9px;padding:7px 11px">إغلاق ✕</button></div><p id="economyInfo" style="line-height:1.8;color:#cbd4da">اختر خدمة من المدينة.</p><div id="economyActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>';
+document.querySelector('#app').appendChild(economyPanel);
+document.querySelector('#economyClose').addEventListener('click',()=>economyPanel.style.display='none');
+function showEconomy(title,info,actions){document.querySelector('#economyTitle').textContent=title;document.querySelector('#economyInfo').textContent=info;const host=document.querySelector('#economyActions');host.replaceChildren();for(const action of actions){const b=document.createElement('button');b.textContent=action.label;b.style.cssText='padding:12px 8px;border:1px solid #ffffff30;border-radius:10px;background:#263b49;color:#fff;font:12px Tahoma;';b.addEventListener('click',action.run);host.appendChild(b);}economyPanel.style.display='block';}
+const workPoint=new THREE.Vector3(-19,0,5);
+const homePoint=new THREE.Vector3(-22,0,-18);
+function startWork(){if(workShift){document.querySelector('#hint').textContent='أنت تعمل بالفعل، أكمل جولتك';return;}workShift=1;showEconomy('مكتب العمل','بدأت ورديتك. أكمل مهامك اليومية ثم عد لاستلام الراتب.',[{label:'إنهاء الوردية + 350',run:()=>{wallet+=350;workShift=0;refreshWallet();economyPanel.style.display='none';document.querySelector('#hint').textContent='استلمت راتبك: ٣٥٠ ديناراً تجريبياً';}}]);}
+function openShop(){showEconomy('متجر وتين','رصيدك: '+wallet.toLocaleString('ar-IQ')+' دينار تجريبي. اختر احتياجاتك.',[{label:'شراء طعام - 50',run:()=>{if(wallet<50)return;wallet-=50;foodStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الطعام. الكمية: '+foodStock;}},{label:'شراء ماء - 20',run:()=>{if(wallet<20)return;wallet-=20;waterStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الماء. الكمية: '+waterStock;}},{label:'تناول الطعام',run:()=>{if(!foodStock)return;foodStock--;const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';document.querySelector('#economyInfo').textContent='تناولت الطعام واستعدت عافيتك.';}},{label:'شرب الماء',run:()=>{if(!waterStock)return;waterStock--;document.querySelector('#economyInfo').textContent='شربت الماء. بالتوفيق في جولتك!';}}]);}
+function restAtHome(){restCount++;const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';showEconomy('المنزل','استرحت في منزلك وعادت صحتك بالكامل. عدد مرات الراحة: '+restCount,[{label:'متابعة اللعب',run:()=>economyPanel.style.display='none'}]);}
+refreshWallet();
 function interactWorld(){
  const nearShop=player.position.distanceTo(shop.position)<13;
- if(nearShop){shopOpen=!shopOpen;document.querySelector('#hint').textContent=shopOpen?'🛒 متجر وتين: طعام وماء وأدوات — قريباً ستتوفر عمليات الشراء':'أغلقت المتجر';return;}
+ if(nearShop){openShop();return;}
+ if(player.position.distanceTo(workPoint)<12){startWork();return;}
+ if(player.position.distanceTo(homePoint)<12){restAtHome();return;}
  const nearVisitor=player.position.distanceTo(visitor.position)<5;
- if(nearVisitor){document.querySelector('#hint').textContent='أهلاً بك في وتين ستي!';return;}
- document.querySelector('#hint').textContent='اقترب من المتجر أو أحد السكان للتفاعل';
+ if(nearVisitor){showEconomy('أحد سكان المدينة','مرحباً بك في وتين ستي! المدينة تكبر بوجودك.',[{label:'إلقاء التحية',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='تبادلت التحية مع أحد السكان';}}]);return;}
+ document.querySelector('#hint').textContent='اقترب من المتجر أو مكتب العمل أو منزلك للتفاعل';
 }
 const interactButton=document.querySelector('#interactBtn');
 if(interactButton)interactButton.addEventListener('click',interactWorld);
