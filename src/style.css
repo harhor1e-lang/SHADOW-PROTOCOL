@@ -40,3 +40,8 @@ body{direction:rtl}
 .toast{direction:rtl}
 @media(max-width:700px){.hero{right:7vw;left:auto}.region-card{left:13px;right:auto}.side-panel{left:12px;right:auto}.hero-actions{justify-content:flex-start}}
 @media(orientation:landscape) and (max-height:520px){.hero{right:7vw;left:auto}}
+
+.quick-actions{flex-wrap:wrap;max-width:55vw}.quick-actions button{font-family:'Cairo',sans-serif}
+.game-action{display:block;width:100%;text-align:right;margin:8px 0;padding:12px 14px;border:1px solid #c9ad6b66;background:#26352a;color:#f0e5cb;font-family:'Cairo',sans-serif;font-size:11px;cursor:pointer}.game-action:active{background:#6e5b36}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat-grid div{padding:12px;background:#26352a;border:1px solid #c9ad6b33;font-size:11px;color:#c9cbbb}.stat-grid b{float:left;color:#e7c985}
+@media(max-width:700px){.quick-actions{max-width:100%;gap:5px}.quick-actions button{padding:8px 9px;font-size:8px}.hud-bottom{bottom:8px}.objective{max-width:190px}}
