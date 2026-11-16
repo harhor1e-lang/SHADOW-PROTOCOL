@@ -104,7 +104,7 @@ house(5,2,1);house(14,-7,.78);house(2,-11,.72);house(21,4,.62);
 
 function leanTo(x,z,scale=1){
  const g=new THREE.Group(),wood=mat(0x65452b),thatch=mat(0x9a8151),dark=mat(0x33271c);
- for(const [px,pz] of [[-1.5,-1],[1.5,-1],[-1.5,1.2],[1.5,1.2]]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.09,.12,2.5,7),wood);post.position.set(px,1.25,pz);g.add(post)}
+ for(const [px,pz] of [[-1.5,-1],[1.5,-1],[-1.5,1.2],[1.5,1.2]]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.09,.12,2.5,7),wood);post.position.set(px,1.25,pz);g.add(post);addCollider(x+px*scale,z+pz*scale,.16*scale,.16*scale,.12)}
  const roof=new THREE.Mesh(new THREE.BoxGeometry(3.5,.2,3.1),thatch);roof.position.set(0,2.35,.1);roof.rotation.x=-.22;g.add(roof);
  const back=new THREE.Mesh(new THREE.BoxGeometry(3.1,1.7,.13),dark);back.position.set(0,.95,-1.05);g.add(back);
  const bed=new THREE.Mesh(new THREE.BoxGeometry(1.3,.25,1.7),mat(0x80603b));bed.position.set(0,.3,.1);g.add(bed);
@@ -112,7 +112,7 @@ function leanTo(x,z,scale=1){
 }
 function watchTower(x,z){
  const g=new THREE.Group(),wood=mat(0x5b4028),roof=mat(0x493526);
- for(const px of [-1,1])for(const pz of [-1,1]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.13,.18,7,7),wood);post.position.set(px,3.5,pz);g.add(post)}
+ for(const px of [-1,1])for(const pz of [-1,1]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.13,.18,7,7),wood);post.position.set(px,3.5,pz);g.add(post);addCollider(x+px,z+pz,.2,.2,.18)}
  const deck=new THREE.Mesh(new THREE.BoxGeometry(3.2,.3,3.2),wood);deck.position.y=5.1;g.add(deck);
  const cap=new THREE.Mesh(new THREE.ConeGeometry(2.4,1.5,4),roof);cap.position.y=7;cap.rotation.y=Math.PI/4;g.add(cap);
  g.position.set(x,height(x,z),z);g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);
@@ -124,8 +124,8 @@ function createRegionSettlements(){
  const sites=[[-360,-260],[350,-330],[-420,360],[390,390]];
  for(const [cx,cz] of sites){for(let j=0;j<5;j++)house(cx+(j%3)*8,cz+Math.floor(j/3)*9,.72+Math.random()*.18);leanTo(cx+20,cz+7,.9);leanTo(cx-13,cz+13,.8);watchTower(cx+16,cz-12)}
  farmstead(-455,390);
- for(let i=0;i<8;i++){const x=-410+i*5,z=365;const fence=new THREE.Mesh(new THREE.BoxGeometry(.12,1,28),mat(0x6a4b2e));fence.position.set(x,height(x,z)+.5,z+8);scene.add(fence)}
- for(let i=0;i<12;i++){const x=390+(i%4)*7,z=390+Math.floor(i/4)*8;const pillar=new THREE.Mesh(new THREE.BoxGeometry(1.1,2.5+(i%3),1.1),mat(0x777365));pillar.position.set(x,height(x,z)+1.2,z);pillar.rotation.z=(i%2)*.12;scene.add(pillar)}
+ for(let i=0;i<8;i++){const x=-410+i*5,z=365;const fence=new THREE.Mesh(new THREE.BoxGeometry(.12,1,28),mat(0x6a4b2e));fence.position.set(x,height(x,z)+.5,z+8);scene.add(fence);addCollider(x,z+8,.12,14,.1)}
+ for(let i=0;i<12;i++){const x=390+(i%4)*7,z=390+Math.floor(i/4)*8;const pillar=new THREE.Mesh(new THREE.BoxGeometry(1.1,2.5+(i%3),1.1),mat(0x777365));pillar.position.set(x,height(x,z)+1.2,z);pillar.rotation.z=(i%2)*.12;scene.add(pillar);addCollider(x,z,.65,.65,.15)}
 }
 createRegionSettlements();
 
