@@ -70,9 +70,7 @@ function villager(x,z,name,job){
  const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.245,14,10,0,Math.PI*2,0,Math.PI*.58),hair);hairCap.position.y=.07;headNode.add(hairCap);
  for(const side of [-1,1]){
   const eye=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),mat(0x211a16));eye.position.set(side*.085,-.025,.215);headNode.add(eye);
-  const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.48,4,8),coat);arm.position.set(side*.38,.94,0);arm.rotation.z=side*.12;g.add(arm);
-  const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.12,.43,4,8),boots);leg.position.set(side*.14,.28,0);g.add(leg);
-  const boot=new THREE.Mesh(new THREE.BoxGeometry(.2,.13,.29),boots);boot.position.set(side*.14,.09,.08);g.add(boot);
+
  }
  const armPivots=[],legPivots=[];
  for(const side of [-1,1]){
