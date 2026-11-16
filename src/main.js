@@ -40,7 +40,19 @@ for(const side of [-1,1]){
  const leg=new THREE.Group();leg.position.set(side*.2,.55,0);player.add(leg);const trouser=new THREE.Mesh(new THREE.CapsuleGeometry(.15,.45,4,8),leatherMat);trouser.position.y=-.25;trouser.castShadow=true;leg.add(trouser);const boot=new THREE.Mesh(new THREE.BoxGeometry(.25,.16,.38),mat(0x241c16));boot.position.set(0,-.53,.08);leg.add(boot);legPivots.push(leg);
 }
 const belt=new THREE.Mesh(new THREE.TorusGeometry(.31,.055,6,16),metalMat);belt.rotation.x=Math.PI/2;belt.position.y=.83;player.add(belt);
-const pack=new THREE.Mesh(new THREE.BoxGeometry(.42,.52,.24),mat(0x6b482b));pack.position.set(0,1.15,-.31);player.add(pack);
+const pack=new THREE.Mesh(new THREE.BoxGeometry(.42,.52,.24),mat(0x6b482b));pack.position.set(0,1.15,-.31);pack.castShadow=true;player.add(pack);
+// تفاصيل الشخصية: عباءة، حواف جلدية، مشابك، ملامح وجه ومعدات سفر
+const cloak=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.78,5,10),mat(0x303a32));cloak.position.set(0,.98,-.22);cloak.scale.set(1,.95,.42);cloak.castShadow=true;player.add(cloak);
+const buckle=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.055),metalMat);buckle.position.set(0,.84,.34);player.add(buckle);
+for(const side of [-1,1]){
+ const eye=new THREE.Mesh(new THREE.SphereGeometry(.027,8,6),mat(0x211c18));eye.position.set(side*.095,1.83,.235);headGroup.add(eye);
+ const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.2,10,8),leatherMat);shoulder.scale.set(1,.65,1);shoulder.position.set(side*.46,1.43,0);player.add(shoulder);
+ const glove=new THREE.Mesh(new THREE.SphereGeometry(.125,8,7),leatherMat);glove.position.set(side*.48,.83,0);player.add(glove);
+ const pouch=new THREE.Mesh(new THREE.BoxGeometry(.2,.23,.16),leatherMat);pouch.position.set(side*.27,.91,.22);player.add(pouch);
+}
+const hoodRim=new THREE.Mesh(new THREE.TorusGeometry(.255,.035,6,16),mat(0x806a48));hoodRim.position.set(0,1.79,.02);hoodRim.rotation.x=Math.PI/2;headGroup.add(hoodRim);
+const nose=new THREE.Mesh(new THREE.ConeGeometry(.045,.11,6),skinMat);nose.position.set(0,1.78,.27);nose.rotation.x=Math.PI/2;player.add(nose);
+player.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 player.position.set(7,height(7,8),8);scene.add(player);
 let walkingBlend=0,jumpVelocity=0,baseGround=height(7,8);
 let yaw=.65,pitch=.35,distance=19,drag=false,last={x:0,y:0},entered=false,day=0,clockMinutes=480,elapsed=0;const cameraGoal=new THREE.Vector3();
@@ -49,7 +61,26 @@ const resourceNodes=[];
 function resourceNode(x,z,type,label,color,amount=1){const g=new THREE.Group();const mesh=new THREE.Mesh(type==='wood'?new THREE.CylinderGeometry(.18,.25,1.8,7):type==='stone'?new THREE.DodecahedronGeometry(.7,1):new THREE.SphereGeometry(.48,8,7),mat(color));mesh.castShadow=true;mesh.position.y=type==='wood'?.9:.45;g.add(mesh);g.position.set(x,height(x,z),z);scene.add(g);resourceNodes.push({mesh:g,type,label,amount,used:false})}
 for(let i=0;i<24;i++){const a=Math.random()*Math.PI*2,r=9+Math.random()*36,x=target.x+Math.cos(a)*r,z=target.z+Math.sin(a)*r;resourceNode(x,z,i%3===0?'stone':i%3===1?'wood':'herbs',i%3===0?'حجر':i%3===1?'خشب':'أعشاب',i%3===0?0x85877d:i%3===1?0x76502f:0x7d9b55,i%3===1?1:1)}
 const villagers=[];
-function villager(x,z,name,job){const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.72,3,7),mat(0x6c5943)),head=new THREE.Mesh(new THREE.SphereGeometry(.24,10,8),mat(0xb98d6d));torso.position.y=.9;head.position.y=1.65;g.add(torso,head);g.position.set(x,height(x,z),z);scene.add(g);villagers.push({mesh:g,name,job,homeX:x,homeZ:z,phase:Math.random()*6});}
+function villager(x,z,name,job){
+ const g=new THREE.Group(),coatColors={'سالم':0x657b43,'مريم':0x8c5968,'حازم':0x806044,'نورس':0x465d70},coat=mat(coatColors[name]||0x75634a),skin=mat(0xb98768),hair=mat(name==='سالم'?0x493322:0x30251f),boots=mat(0x33251d);
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.31,.7,5,10),coat);body.position.y=.91;g.add(body);
+ const beltMesh=new THREE.Mesh(new THREE.TorusGeometry(.29,.045,6,14),leatherMat);beltMesh.position.y=.72;beltMesh.rotation.x=Math.PI/2;g.add(beltMesh);
+ const headNode=new THREE.Group();headNode.position.y=1.52;g.add(headNode);
+ const skull=new THREE.Mesh(new THREE.SphereGeometry(.235,16,12),skin);skull.scale.set(.94,1.12,.92);headNode.add(skull);
+ const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.245,14,10,0,Math.PI*2,0,Math.PI*.58),hair);hairCap.position.y=.07;headNode.add(hairCap);
+ for(const side of [-1,1]){
+  const eye=new THREE.Mesh(new THREE.SphereGeometry(.022,8,6),mat(0x211a16));eye.position.set(side*.085,-.025,.215);headNode.add(eye);
+  const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.48,4,8),coat);arm.position.set(side*.38,.94,0);arm.rotation.z=side*.12;g.add(arm);
+  const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.12,.43,4,8),boots);leg.position.set(side*.14,.28,0);g.add(leg);
+  const boot=new THREE.Mesh(new THREE.BoxGeometry(.2,.13,.29),boots);boot.position.set(side*.14,.09,.08);g.add(boot);
+ }
+ const apron=new THREE.Mesh(new THREE.BoxGeometry(.34,.43,.035),mat(name==='حازم'?0x49372a:0x6b563e));apron.position.set(0,.78,.29);g.add(apron);
+ if(name==='نورس'){const helmet=new THREE.Mesh(new THREE.SphereGeometry(.27,12,8,0,Math.PI*2,0,Math.PI*.5),metalMat);helmet.position.y=1.77;g.add(helmet);const shield=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.07,8),mat(0x79603a));shield.position.set(.48,.92,-.04);shield.rotation.z=Math.PI/2;g.add(shield)}
+ if(name==='مريم'){const hood=new THREE.Mesh(new THREE.SphereGeometry(.27,12,8,0,Math.PI*2,0,Math.PI*.7),mat(0x543b48));hood.position.y=1.62;g.add(hood)}
+ if(name==='حازم'){const tool=new THREE.Mesh(new THREE.BoxGeometry(.08,.62,.08),leatherMat);tool.position.set(.43,.85,.08);g.add(tool)}
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ g.position.set(x,height(x,z),z);scene.add(g);villagers.push({mesh:g,name,job,homeX:x,homeZ:z,phase:Math.random()*6});
+}
 villager(10,5,'سالم','مزارع');villager(17,-3,'مريم','معالجة الأعشاب');villager(-1,-9,'حازم','نجار');villager(23,8,'نورس','حارس');
 
 const wildlife=[];
@@ -57,9 +88,17 @@ function animal(x,z,kind){
  const g=new THREE.Group(),fur=mat(kind==='غزال'?0x98734d:0x8c8877),dark=mat(0x30271f);
  const torso=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.55:.34,12,10),fur);torso.scale.set(1.35,.82,.72);torso.position.y=kind==='غزال'?.95:.48;g.add(torso);
  const head=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.22:.18,10,8),fur);head.position.set(0,kind==='غزال'?1.45:.62,.48);g.add(head);
- if(kind==='غزال'){for(const s of [-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,.7,6),dark);leg.position.set(s*.25,.38,.05);g.add(leg);const ear=new THREE.Mesh(new THREE.ConeGeometry(.07,.55,5),dark);ear.position.set(s*.13,1.83,.45);ear.rotation.z=s*.25;g.add(ear)}}
- else{for(const s of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.09,.42,6),fur);ear.position.set(s*.11,.86,.5);g.add(ear)}}
- g.position.set(x,height(x,z),z);scene.add(g);wildlife.push({mesh:g,kind,homeX:x,homeZ:z,phase:Math.random()*8,speed:.35+Math.random()*.4});
+ const legs=[];
+ if(kind==='غزال'){
+  for(const sx of [-1,1])for(const sz of [-1,1]){const leg=new THREE.Group();leg.position.set(sx*.28,.72,sz*.22);const shin=new THREE.Mesh(new THREE.CylinderGeometry(.035,.052,.68,7),dark);shin.position.y=-.34;leg.add(shin);g.add(leg);legs.push(leg)}
+  for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.07,.55,5),dark);ear.position.set(side*.13,1.83,.45);ear.rotation.z=side*.25;g.add(ear);const antler=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.48,5),dark);antler.position.set(side*.12,1.83,.39);antler.rotation.z=side*.35;g.add(antler)}
+ }else{
+  for(const sx of [-1,1])for(const sz of [-1,1]){const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.055,.18,3,6),dark);leg.position.set(sx*.2,.22,sz*.2);g.add(leg);legs.push(leg)}
+  for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.09,.42,6),fur);ear.position.set(side*.11,.86,.5);g.add(ear)}
+  const tail=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),fur);tail.position.set(0,.55,-.43);g.add(tail);
+ }
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ g.position.set(x,height(x,z),z);scene.add(g);wildlife.push({mesh:g,kind,legs,homeX:x,homeZ:z,phase:Math.random()*8,speed:.35+Math.random()*.4});
 }
 for(let i=0;i<5;i++){const a=i/5*Math.PI*2;animal(Math.cos(a)*30+18,Math.sin(a)*28-12,'غزال');}
 for(let i=0;i<7;i++){const a=Math.random()*Math.PI*2,r=12+Math.random()*30;animal(Math.cos(a)*r+10,Math.sin(a)*r+4,'أرنب');}
@@ -70,7 +109,7 @@ if(!entered)return;survivalTick+=dt;weatherTick+=dt;
 if(survivalTick>18){survivalTick=0;game.hunger=Math.max(0,game.hunger-.8);game.thirst=Math.max(0,game.thirst-1.2);game.stamina=Math.min(100,game.stamina+2);if(game.hunger===0||game.thirst===0)game.health=Math.max(1,game.health-2);$('#health-bar').style.width=game.health+'%';$('#stamina-bar').style.width=game.stamina+'%';$('#hunger-bar').style.width=game.hunger+'%';$('#thirst-bar').style.width=game.thirst+'%';saveGame()}
 if(weatherTick>85){weatherTick=0;const weathers=['صحو','ضباب','مطر خفيف','عاصفة'];const w=weathers[Math.floor(Math.random()*weathers.length)];$('#weather-label').textContent=w;toast('تغير الطقس: '+w)}
 for(const v of villagers){v.mesh.position.x=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3;v.mesh.position.z=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z)}
-for(const a of wildlife){const wander=Math.sin(elapsed*a.speed+a.phase);a.mesh.position.x=a.homeX+wander*2.2;a.mesh.position.z=a.homeZ+Math.cos(elapsed*a.speed*.7+a.phase)*1.7;a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);a.mesh.rotation.y=Math.atan2(Math.cos(elapsed*a.speed+a.phase),-Math.sin(elapsed*a.speed*.7+a.phase));}
+for(const a of wildlife){const wander=Math.sin(elapsed*a.speed+a.phase);a.mesh.position.x=a.homeX+wander*2.2;a.mesh.position.z=a.homeZ+Math.cos(elapsed*a.speed*.7+a.phase)*1.7;a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);a.mesh.rotation.y=Math.atan2(Math.cos(elapsed*a.speed+a.phase),-Math.sin(elapsed*a.speed*.7+a.phase));a.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(elapsed*a.speed*5+a.phase+(i%2)*Math.PI)*.42});}
 }
 
 addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key.toLowerCase()==='f')interact()});
