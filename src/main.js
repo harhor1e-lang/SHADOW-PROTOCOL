@@ -87,18 +87,21 @@ const wildlife=[];
 function animal(x,z,kind){
  const g=new THREE.Group(),fur=mat(kind==='غزال'?0x98734d:0x8c8877),dark=mat(0x30271f);
  const torso=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.55:.34,12,10),fur);torso.scale.set(1.35,.82,.72);torso.position.y=kind==='غزال'?.95:.48;g.add(torso);
- const head=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.22:.18,10,8),fur);head.position.set(0,kind==='غزال'?1.45:.62,.48);g.add(head);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.22:.18,12,10),fur);head.position.set(0,kind==='غزال'?1.45:.62,.48);g.add(head);
+ const eyes=[];for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.035:.028,8,6),mat(0x171411));eye.position.set(side*(kind==='غزال'?.16:.125),kind==='غزال'?1.49:.65,.625);g.add(eye);eyes.push(eye)}
+ const muzzle=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.09:.07,8,6),fur);muzzle.position.set(0,kind==='غزال'?1.37:.56,.66);muzzle.scale.set(1,.7,1);g.add(muzzle);
  const legs=[];
  if(kind==='غزال'){
   for(const sx of [-1,1])for(const sz of [-1,1]){const leg=new THREE.Group();leg.position.set(sx*.28,.72,sz*.22);const shin=new THREE.Mesh(new THREE.CylinderGeometry(.035,.052,.68,7),dark);shin.position.y=-.34;leg.add(shin);g.add(leg);legs.push(leg)}
-  for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.07,.55,5),dark);ear.position.set(side*.13,1.83,.45);ear.rotation.z=side*.25;g.add(ear);const antler=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.48,5),dark);antler.position.set(side*.12,1.83,.39);antler.rotation.z=side*.35;g.add(antler)}
+  for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.07,.55,5),dark);ear.position.set(side*.13,1.83,.45);ear.rotation.z=side*.25;g.add(ear);const antler=new THREE.Group();antler.position.set(side*.12,1.65,.39);const stem=new THREE.Mesh(new THREE.CylinderGeometry(.018,.035,.48,5),dark);antler.add(stem);for(let branch=0;branch<2;branch++){const tine=new THREE.Mesh(new THREE.CylinderGeometry(.012,.022,.25,5),dark);tine.position.set(side*.07,.12+branch*.13,0);tine.rotation.z=side*-.55;antler.add(tine)}g.add(antler)}
+  const tail=new THREE.Mesh(new THREE.SphereGeometry(.13,8,6),fur);tail.position.set(0,.98,-.72);g.add(tail);
  }else{
   for(const sx of [-1,1])for(const sz of [-1,1]){const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.055,.18,3,6),dark);leg.position.set(sx*.2,.22,sz*.2);g.add(leg);legs.push(leg)}
   for(const side of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.09,.42,6),fur);ear.position.set(side*.11,.86,.5);g.add(ear)}
   const tail=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),fur);tail.position.set(0,.55,-.43);g.add(tail);
  }
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
- g.position.set(x,height(x,z),z);scene.add(g);wildlife.push({mesh:g,kind,legs,homeX:x,homeZ:z,phase:Math.random()*8,speed:.35+Math.random()*.4});
+ g.position.set(x,height(x,z),z);scene.add(g);wildlife.push({mesh:g,head,kind,legs,eyes,homeX:x,homeZ:z,phase:Math.random()*8,speed:.35+Math.random()*.4,flee:0});
 }
 for(let i=0;i<5;i++){const a=i/5*Math.PI*2;animal(Math.cos(a)*30+18,Math.sin(a)*28-12,'غزال');}
 for(let i=0;i<7;i++){const a=Math.random()*Math.PI*2,r=12+Math.random()*30;animal(Math.cos(a)*r+10,Math.sin(a)*r+4,'أرنب');}
@@ -109,7 +112,7 @@ if(!entered)return;survivalTick+=dt;weatherTick+=dt;
 if(survivalTick>18){survivalTick=0;game.hunger=Math.max(0,game.hunger-.8);game.thirst=Math.max(0,game.thirst-1.2);game.stamina=Math.min(100,game.stamina+2);if(game.hunger===0||game.thirst===0)game.health=Math.max(1,game.health-2);$('#health-bar').style.width=game.health+'%';$('#stamina-bar').style.width=game.stamina+'%';$('#hunger-bar').style.width=game.hunger+'%';$('#thirst-bar').style.width=game.thirst+'%';saveGame()}
 if(weatherTick>85){weatherTick=0;const weathers=['صحو','ضباب','مطر خفيف','عاصفة'];const w=weathers[Math.floor(Math.random()*weathers.length)];$('#weather-label').textContent=w;toast('تغير الطقس: '+w)}
 for(const v of villagers){v.mesh.position.x=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3;v.mesh.position.z=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z)}
-for(const a of wildlife){const wander=Math.sin(elapsed*a.speed+a.phase);a.mesh.position.x=a.homeX+wander*2.2;a.mesh.position.z=a.homeZ+Math.cos(elapsed*a.speed*.7+a.phase)*1.7;a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);a.mesh.rotation.y=Math.atan2(Math.cos(elapsed*a.speed+a.phase),-Math.sin(elapsed*a.speed*.7+a.phase));a.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(elapsed*a.speed*5+a.phase+(i%2)*Math.PI)*.42});}
+for(const a of wildlife){const dx=a.mesh.position.x-target.x,dz=a.mesh.position.z-target.z,dist=Math.hypot(dx,dz);let vx=0,vz=0;if(entered&&dist<10){a.flee=Math.max(a.flee,2.8);vx=dx/(dist||1);vz=dz/(dist||1)}else{const wander=Math.sin(elapsed*a.speed+a.phase);vx=Math.cos(elapsed*a.speed*.7+a.phase)*.42;vz=Math.sin(elapsed*a.speed+a.phase)*.32;a.flee=Math.max(0,a.flee-dt)}const pace=a.flee>0?5.2:1.1;a.mesh.position.x+=vx*pace*dt;a.mesh.position.z+=vz*pace*dt;if(a.flee<=0){a.mesh.position.x+=(a.homeX-a.mesh.position.x)*dt*.12;a.mesh.position.z+=(a.homeZ-a.mesh.position.z)*dt*.12}a.mesh.position.x=THREE.MathUtils.clamp(a.mesh.position.x,-112,112);a.mesh.position.z=THREE.MathUtils.clamp(a.mesh.position.z,-112,112);a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);if(Math.abs(vx)+Math.abs(vz)>.05)a.mesh.rotation.y=Math.atan2(vx,vz);a.head.rotation.x=a.flee>0?-.12:Math.sin(elapsed*1.4+a.phase)*.08;a.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(elapsed*(a.flee>0?11:4)+a.phase+(i%2)*Math.PI)* (a.flee>0?.72:.18)});}
 }
 
 addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key.toLowerCase()==='f')interact()});
