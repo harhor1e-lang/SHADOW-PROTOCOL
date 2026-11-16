@@ -243,7 +243,18 @@ document.querySelector('#app').appendChild(economyPanel);
 document.querySelector('#economyClose').addEventListener('click',()=>economyPanel.style.display='none');
 function showEconomy(title,info,actions){document.querySelector('#economyTitle').textContent=title;document.querySelector('#economyInfo').textContent=info;const host=document.querySelector('#economyActions');host.replaceChildren();for(const action of actions){const b=document.createElement('button');b.textContent=action.label;b.style.cssText='padding:12px 8px;border:1px solid #ffffff30;border-radius:10px;background:#263b49;color:#fff;font:12px Tahoma;';b.addEventListener('click',action.run);host.appendChild(b);}economyPanel.style.display='block';}
 const workPoint=new THREE.Vector3(-19,0,5);
+
 const homePoint=new THREE.Vector3(-22,0,-18);
+function makeWorldMarker(position,color,label){
+ const group=new THREE.Group();group.position.copy(position);scene.add(group);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(1.05,.09,8,24),mat(color));ring.rotation.x=Math.PI/2;ring.position.y=.12;group.add(ring);
+ const beam=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,2.2,8),mat(color));beam.position.y=1.25;group.add(beam);
+ const orb=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),mat(color));orb.position.y=2.45;group.add(orb);
+ return group;
+}
+const workMarker=makeWorldMarker(workPoint,0x65c7a1,'عمل');
+const homeMarker=makeWorldMarker(homePoint,0x7bb8e8,'منزل');
+
 function startWork(){if(workShift){document.querySelector('#hint').textContent='أنت تعمل بالفعل، أكمل جولتك';return;}workShift=1;showEconomy('مكتب العمل','بدأت ورديتك. أكمل مهامك اليومية ثم عد لاستلام الراتب.',[{label:'إنهاء الوردية + 350',run:()=>{wallet+=350;workShift=0;refreshWallet();economyPanel.style.display='none';document.querySelector('#hint').textContent='استلمت راتبك: ٣٥٠ ديناراً تجريبياً';}}]);}
 function openShop(){showEconomy('متجر وتين','رصيدك: '+wallet.toLocaleString('ar-IQ')+' دينار تجريبي. اختر احتياجاتك.',[{label:'شراء طعام - 50',run:()=>{if(wallet<50)return;wallet-=50;foodStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الطعام. الكمية: '+foodStock;}},{label:'شراء ماء - 20',run:()=>{if(wallet<20)return;wallet-=20;waterStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الماء. الكمية: '+waterStock;}},{label:'تناول الطعام',run:()=>{if(!foodStock)return;foodStock--;const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';document.querySelector('#economyInfo').textContent='تناولت الطعام واستعدت عافيتك.';}},{label:'شرب الماء',run:()=>{if(!waterStock)return;waterStock--;document.querySelector('#economyInfo').textContent='شربت الماء. بالتوفيق في جولتك!';}}]);}
 function restAtHome(){restCount++;const hp=document.querySelector('#health');if(hp)hp.textContent='١٠٠';showEconomy('المنزل','استرحت في منزلك وعادت صحتك بالكامل. عدد مرات الراحة: '+restCount,[{label:'متابعة اللعب',run:()=>economyPanel.style.display='none'}]);}
