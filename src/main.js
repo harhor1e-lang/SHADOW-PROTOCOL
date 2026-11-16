@@ -74,12 +74,17 @@ function villager(x,z,name,job){
   const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.12,.43,4,8),boots);leg.position.set(side*.14,.28,0);g.add(leg);
   const boot=new THREE.Mesh(new THREE.BoxGeometry(.2,.13,.29),boots);boot.position.set(side*.14,.09,.08);g.add(boot);
  }
+ const armPivots=[],legPivots=[];
+ for(const side of [-1,1]){
+  const arm=new THREE.Group();arm.position.set(side*.38,1.25,0);const sleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.48,4,8),coat);sleeve.position.y=-.27;sleeve.rotation.z=side*.12;arm.add(sleeve);const hand=new THREE.Mesh(new THREE.SphereGeometry(.085,8,6),skin);hand.position.y=-.55;arm.add(hand);g.add(arm);armPivots.push(arm);
+  const leg=new THREE.Group();leg.position.set(side*.14,.48,0);const lower=new THREE.Mesh(new THREE.CapsuleGeometry(.12,.43,4,8),boots);lower.position.y=-.2;leg.add(lower);const boot=new THREE.Mesh(new THREE.BoxGeometry(.2,.13,.29),boots);boot.position.set(0,-.43,.08);leg.add(boot);g.add(leg);legPivots.push(leg);
+ }
  const apron=new THREE.Mesh(new THREE.BoxGeometry(.34,.43,.035),mat(name==='حازم'?0x49372a:0x6b563e));apron.position.set(0,.78,.29);g.add(apron);
  if(name==='نورس'){const helmet=new THREE.Mesh(new THREE.SphereGeometry(.27,12,8,0,Math.PI*2,0,Math.PI*.5),metalMat);helmet.position.y=1.77;g.add(helmet);const shield=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.07,8),mat(0x79603a));shield.position.set(.48,.92,-.04);shield.rotation.z=Math.PI/2;g.add(shield)}
  if(name==='مريم'){const hood=new THREE.Mesh(new THREE.SphereGeometry(.27,12,8,0,Math.PI*2,0,Math.PI*.7),mat(0x543b48));hood.position.y=1.62;g.add(hood)}
  if(name==='حازم'){const tool=new THREE.Mesh(new THREE.BoxGeometry(.08,.62,.08),leatherMat);tool.position.set(.43,.85,.08);g.add(tool)}
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
- g.position.set(x,height(x,z),z);scene.add(g);villagers.push({mesh:g,name,job,homeX:x,homeZ:z,phase:Math.random()*6});
+ g.position.set(x,height(x,z),z);scene.add(g);villagers.push({mesh:g,name,job,homeX:x,homeZ:z,phase:Math.random()*6,armPivots,legPivots});
 }
 villager(10,5,'سالم','مزارع');villager(17,-3,'مريم','معالجة الأعشاب');villager(-1,-9,'حازم','نجار');villager(23,8,'نورس','حارس');
 
@@ -111,7 +116,7 @@ function updateSurvival(dt,hour){
 if(!entered)return;survivalTick+=dt;weatherTick+=dt;
 if(survivalTick>18){survivalTick=0;game.hunger=Math.max(0,game.hunger-.8);game.thirst=Math.max(0,game.thirst-1.2);game.stamina=Math.min(100,game.stamina+2);if(game.hunger===0||game.thirst===0)game.health=Math.max(1,game.health-2);$('#health-bar').style.width=game.health+'%';$('#stamina-bar').style.width=game.stamina+'%';$('#hunger-bar').style.width=game.hunger+'%';$('#thirst-bar').style.width=game.thirst+'%';saveGame()}
 if(weatherTick>85){weatherTick=0;const weathers=['صحو','ضباب','مطر خفيف','عاصفة'];const w=weathers[Math.floor(Math.random()*weathers.length)];$('#weather-label').textContent=w;toast('تغير الطقس: '+w)}
-for(const v of villagers){v.mesh.position.x=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3;v.mesh.position.z=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z)}
+for(const v of villagers){const oldX=v.mesh.position.x,oldZ=v.mesh.position.z;v.mesh.position.x=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3;v.mesh.position.z=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z);const moving=Math.hypot(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)>.001;const step=Math.sin(elapsed*3.8+v.phase)*(moving?.28:.035);v.armPivots[0].rotation.x=step;v.armPivots[1].rotation.x=-step;v.legPivots[0].rotation.x=-step*.8;v.legPivots[1].rotation.x=step*.8;v.mesh.rotation.y=Math.atan2(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)}
 for(const a of wildlife){const dx=a.mesh.position.x-target.x,dz=a.mesh.position.z-target.z,dist=Math.hypot(dx,dz);let vx=0,vz=0;if(entered&&dist<10){a.flee=Math.max(a.flee,2.8);vx=dx/(dist||1);vz=dz/(dist||1)}else{const wander=Math.sin(elapsed*a.speed+a.phase);vx=Math.cos(elapsed*a.speed*.7+a.phase)*.42;vz=Math.sin(elapsed*a.speed+a.phase)*.32;a.flee=Math.max(0,a.flee-dt)}const pace=a.flee>0?5.2:1.1;a.mesh.position.x+=vx*pace*dt;a.mesh.position.z+=vz*pace*dt;if(a.flee<=0){a.mesh.position.x+=(a.homeX-a.mesh.position.x)*dt*.12;a.mesh.position.z+=(a.homeZ-a.mesh.position.z)*dt*.12}a.mesh.position.x=THREE.MathUtils.clamp(a.mesh.position.x,-112,112);a.mesh.position.z=THREE.MathUtils.clamp(a.mesh.position.z,-112,112);a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);if(Math.abs(vx)+Math.abs(vz)>.05)a.mesh.rotation.y=Math.atan2(vx,vz);a.head.rotation.x=a.flee>0?-.12:Math.sin(elapsed*1.4+a.phase)*.08;a.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(elapsed*(a.flee>0?11:4)+a.phase+(i%2)*Math.PI)* (a.flee>0?.72:.18)});}
 }
 
