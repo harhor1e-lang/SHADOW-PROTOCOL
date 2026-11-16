@@ -13,13 +13,18 @@
   <meta name="description" content="وتين ستي: عالم مفتوح ثلاثي الأبعاد للهاتف، باللغة العربية" />
   <title>وتين ستي | عالم مفتوح عربي</title>
   <style>html,body,#app{margin:0;width:100%;height:100%;min-height:100%;background:#101820;color:#fff;font-family:Tahoma,Arial,sans-serif}body{overflow:hidden}#game{position:absolute;inset:0;width:100%;height:100%;background:linear-gradient(#83b7d0,#71875d)}.intro-screen{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:linear-gradient(115deg,#050d16,#0a1e2a 55%,#1f2a2a);color:#fff;text-align:center}.intro-content{width:min(88%,520px);padding:24px}.intro-emblem{margin:0 auto 14px;width:68px;height:68px;border:1px solid #e5b65d;border-radius:22px;display:grid;place-items:center;color:#f2c36c;font-size:42px}.intro-content h1{font-size:clamp(42px,12vw,76px);margin:0}.intro-content h1 span{color:#e8b75d}.intro-description{line-height:1.9;color:#d5dce0}.start-game{border:0;border-radius:14px;padding:15px 30px;background:linear-gradient(110deg,#f0c879,#b77a32);color:#17202a;font:bold 16px Tahoma}.intro-footer{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;padding:0 20px;color:#d6b36e;font-size:10px}.intro-screen.closed{opacity:0;visibility:hidden;pointer-events:none}.rotate-notice{display:none}</style>
-</head>
+<style>
+#introCinematic{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.intro-shade{position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(4,10,16,.72),rgba(4,10,16,.24) 48%,rgba(4,10,16,.66)),linear-gradient(0deg,rgba(3,8,12,.8),transparent 65%)}
+.intro-content,.intro-footer{z-index:2}.intro-glow{z-index:1;pointer-events:none}
+.intro-content{background:rgba(5,13,22,.38);border:1px solid #ffffff20;border-radius:24px;backdrop-filter:blur(5px);box-shadow:0 20px 70px #0005}
+</style></head>
 <body>
   <div id="app">
     <div id="rotateNotice" class="rotate-notice"><div class="rotate-icon">↻</div><strong>وتين ستي تُلعب بالوضع الأفقي</strong><span>يرجى تدوير الهاتف أفقياً للاستمتاع بالعالم والتحكم بشكل كامل.</span></div>
     <div id="game"></div>
     <section class="intro-screen" id="introScreen" aria-label="مقدمة وتين ستي">
-      <div class="intro-glow"></div><div class="intro-content">
+      <canvas id="introCinematic" aria-hidden="true"></canvas><div class="intro-shade"></div><div class="intro-glow"></div><div class="intro-content">
         <div class="intro-emblem">و</div><p class="intro-kicker">عالم مفتوح • حياة بلا حدود</p>
         <h1>وتين <span>ستي</span></h1>
         <p class="intro-description">مدينة تنبض بالحياة، شوارع ومغامرات ومهن وأصدقاء وملاهي تنتظرك لاكتشافها.</p>
@@ -44,6 +49,20 @@
     <div class="loading" id="loading"><div class="loader"></div><strong>جاري بناء المدينة...</strong><small>تهيئة العالم ثلاثي الأبعاد</small></div>
   </div>
   <noscript><div style="position:fixed;inset:0;z-index:9999;background:#101820;color:white;display:grid;place-items:center;text-align:center;padding:24px">يرجى تفعيل JavaScript لتشغيل لعبة وتين ستي.</div></noscript>
+<script>
+(()=>{const c=document.getElementById('introCinematic');if(!c)return;const x=c.getContext('2d');let t=0;
+function draw(){const w=c.width=c.clientWidth*Math.min(devicePixelRatio||1,1.5),h=c.height=c.clientHeight*Math.min(devicePixelRatio||1,1.5);x.setTransform(1,0,0,1,0,0);x.scale(Math.min(devicePixelRatio||1,1.5),Math.min(devicePixelRatio||1,1.5));const W=c.clientWidth,H=c.clientHeight;t+=.012;
+const sky=x.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#294d63');sky.addColorStop(.52,'#b58f72');sky.addColorStop(1,'#263b3d');x.fillStyle=sky;x.fillRect(0,0,W,H);
+x.fillStyle='#f1bd79';x.beginPath();x.arc(W*.76,H*.22,Math.min(W,H)*.07,0,7);x.fill();
+x.fillStyle='#35474a';x.fillRect(0,H*.56,W,H*.44);
+for(let i=0;i<16;i++){const bw=W*.055+(i%4)*W*.009,bh=H*(.18+(i*13%23)/100),bx=i*W/15-W*.01,by=H*.57-bh;x.fillStyle=['#6c7774','#8d8170','#596d73','#a28c73'][i%4];x.fillRect(bx,by,bw,bh);x.fillStyle='#e9c58c';for(let yy=by+12;yy<H*.56-6;yy+=18)for(let xx=bx+7;xx<bx+bw-4;xx+=13){x.globalAlpha=.35+.3*Math.sin(t*2+i+yy);x.fillRect(xx,yy,6,8)}x.globalAlpha=1;}
+x.fillStyle='#b5a38a';x.fillRect(0,H*.68,W,H*.32);
+x.fillStyle='#30383c';x.beginPath();x.moveTo(W*.39,H*.58);x.lineTo(W*.61,H*.58);x.lineTo(W*1.15,H);x.lineTo(-W*.15,H);x.fill();
+x.strokeStyle='#e9d6a8';x.lineWidth=3;x.setLineDash([18,22]);x.beginPath();x.moveTo(W*.5,H*.61);x.lineTo(W*.5,H);x.stroke();x.setLineDash([]);
+for(let i=0;i<5;i++){const p=(t*.025+i*.22)%1,y=H*.59+p*p*H*.42,cw=12+p*W*.08,ch=6+p*H*.04,bx=W*(.5+(i%2?-.16:.16)*p);x.fillStyle=['#b94b3d','#d3d0c5','#41677c','#c49a51'][i%4];x.fillRect(bx-cw/2,y-ch,cw,ch);x.fillStyle='#9dc1ca';x.fillRect(bx-cw*.25,y-ch*.78,cw*.5,ch*.32);x.fillStyle='#111';x.beginPath();x.arc(bx-cw*.3,y,3+p*3,0,7);x.arc(bx+cw*.3,y,3+p*3,0,7);x.fill();}
+for(let i=0;i<9;i++){const p=(i*.12+t*.008)%1,y=H*.64+p*p*H*.33,bx=W*(.22+(i%5)*.13)+Math.sin(t+i)*5,s=.4+p*.8;x.fillStyle='#1d3440';x.fillRect(bx-3*s,y-17*s,6*s,15*s);x.fillStyle='#b98260';x.beginPath();x.arc(bx,y-21*s,4*s,0,7);x.fill();}
+requestAnimationFrame(draw)}draw()})();
+</script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
