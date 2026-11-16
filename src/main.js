@@ -234,7 +234,7 @@ let dayClock=0,shopOpen=false;
 // First playable economy loop: wallet, stock, work shift and home rest.
 const SAVE_KEY='wateen-city-save-v1';
 let wallet=2500,foodStock=0,waterStock=0,workShift=0,restCount=0;
-try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(saved&&saved.version===1){wallet=Math.max(0,Number(saved.wallet)||2500);foodStock=Math.max(0,Number(saved.foodStock)||0);waterStock=Math.max(0,Number(saved.waterStock)||0);workShift=saved.workShift?1:0;restCount=Math.max(0,Number(saved.restCount)||0);}}catch(e){console.warn('تعذر تحميل الحفظ المحلي',e);}
+try{const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(saved&&saved.version===1){wallet=Math.max(0,Number.isFinite(Number(saved.wallet))?Number(saved.wallet):2500);foodStock=Math.max(0,Number(saved.foodStock)||0);waterStock=Math.max(0,Number(saved.waterStock)||0);workShift=saved.workShift?1:0;restCount=Math.max(0,Number(saved.restCount)||0);}}catch(e){console.warn('تعذر تحميل الحفظ المحلي',e);}
 function saveProgress(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,wallet,foodStock,waterStock,workShift,restCount,savedAt:Date.now()}));}catch(e){console.warn('تعذر حفظ التقدم',e);}}
 function refreshWallet(){const el=document.querySelector('#money');if(el)el.textContent=wallet.toLocaleString('ar-IQ');const inv=document.querySelector('#inventory');if(inv)inv.textContent='طعام '+foodStock+' · ماء '+waterStock;saveProgress();}
 const economyPanel=document.createElement('section');
