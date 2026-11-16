@@ -1,5 +1,13 @@
 import * as THREE from 'three';
 const $=s=>document.querySelector(s), app=$('#app'), canvas=$('#world-canvas');
+function showFatalError(message){
+ let panel=document.getElementById('fatal-error-panel');
+ if(!panel){panel=document.createElement('div');panel.id='fatal-error-panel';panel.style.cssText='position:fixed;z-index:99999;inset:12px;padding:18px;background:#211b18;color:#fff;border:2px solid #c77b54;border-radius:12px;font:15px Tahoma,Arial;direction:rtl;overflow:auto;white-space:pre-wrap';document.body.appendChild(panel)}
+ panel.textContent='تعذّر تشغيل اللعبة بسبب خطأ تقني. أرسل هذه الرسالة للدعم:\\n'+String(message||'خطأ غير معروف');
+}
+window.addEventListener('error',e=>showFatalError(e.message||e.error?.stack||'JavaScript error'));
+window.addEventListener('unhandledrejection',e=>showFatalError(e.reason?.stack||e.reason||'Promise rejection'));
+
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9bb6b0);scene.fog=new THREE.FogExp2(0x9bb6b0,.009);
 const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,2600);camera.position.set(24,19,28);
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
@@ -65,11 +73,11 @@ function blockedPosition(x,z,r=.48){
  return false;
 }
 function moveWithCollision(obj,dx,dz,r=.48){
- let x=obj.position.x,z=obj.position.z;
+ const startX=obj.position.x,startZ=obj.position.z;let x=startX,z=startZ;
  if(!blockedPosition(x+dx,z,r))x+=dx;
  if(!blockedPosition(x,z+dz,r))z+=dz;
  obj.position.x=x;obj.position.z=z;
- return {x,z,moved:Math.abs(x-obj.position.x)+Math.abs(z-obj.position.z)>0};
+ return {x,z,moved:Math.abs(x-startX)+Math.abs(z-startZ)>.0001};
 }
 const houseInstances=[],sleepingBeds=[];
 function house(x,z,s=1){
