@@ -136,9 +136,10 @@ function placeBuild(kind,x,z,rot=0,restoring=false){
 }
 function dismantleNearest(){
  let best=null,dist=7;
- for(const item of builtObjects){const d=Math.hypot(target.x-item.x,target.z-item.z);if(d<dist){best=item;dist=d}}
+ for(const item of builtObjects){if(item.kind==='house')continue;const d=Math.hypot(target.x-item.x,target.z-item.z);if(d<dist){best=item;dist=d}}
  if(!best){toast('اقترب من قطعة بنيتها حتى تفككها.');return}
  scene.remove(best.mesh);
+ if(best.kind==='bed'){const bi=sleepingBeds.findIndex(b=>b.mesh===best.mesh);if(bi>=0)sleepingBeds.splice(bi,1)}
  for(const c of best.colliders||[]){const minX=Math.floor((c.x-c.hx-c.r)/collisionCell),maxX=Math.floor((c.x+c.hx+c.r)/collisionCell),minZ=Math.floor((c.z-c.hz-c.r)/collisionCell),maxZ=Math.floor((c.z+c.hz+c.r)/collisionCell);for(let gx=minX;gx<=maxX;gx++)for(let gz=minZ;gz<=maxZ;gz++){const key=gx+','+gz,list=collisionGrid.get(key);if(list){const i=list.indexOf(c);if(i>=0)list.splice(i,1);if(!list.length)collisionGrid.delete(key)}}}
  const saved=game.placedBuilds.findIndex(p=>p.kind===best.kind&&Math.abs(p.x-best.x)<.01&&Math.abs(p.z-best.z)<.01);
  if(saved>=0)game.placedBuilds.splice(saved,1);
