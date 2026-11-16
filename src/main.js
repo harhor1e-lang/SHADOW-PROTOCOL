@@ -124,9 +124,9 @@ const buildCatalog={
  torch:{name:'مشعل',wood:2,stone:0,kind:'torch'},
  farm:{name:'حوض زراعة',wood:3,stone:1,kind:'farm'}
 };
-function placeBuild(kind,x,z,rot=0,restoring=false,contents=null,farmGrowth=0){
+function placeBuild(kind,x,z,rot=0,restoring=false,contents=null){
  const item=buildCatalog[kind];if(!item)return null;
- const g=new THREE.Group(),wood=mat(0x765033),plank=mat(0x9a7046),stone=mat(0x77786b),cloth=mat(0x687b70),metal=mat(0x554638),colliderRefs=[],cropMeshes=[];
+ const g=new THREE.Group(),wood=mat(0x765033),plank=mat(0x9a7046),stone=mat(0x77786b),cloth=mat(0x687b70),metal=mat(0x554638),colliderRefs=[];
  const box=(w,h,d,px,py,pz,material)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(px,py,pz);o.castShadow=true;o.receiveShadow=true;g.add(o);return o};
  if(kind==='house'){const h=house(x,z,1);builtObjects.push({kind,x,z,rot,mesh:h});return h}
  if(kind==='wall'||kind==='stonewall'){box(4,2.8,.22,0,1.4,0,kind==='wall'?plank:stone);if(kind==='wall')for(let y=.35;y<2.8;y+=.55)box(4.02,.07,.25,0,y,0,wood);colliderRefs.push(addCollider(x,z,2,.16,.35))}
@@ -139,8 +139,8 @@ function placeBuild(kind,x,z,rot=0,restoring=false,contents=null,farmGrowth=0){
  if(kind==='table'){box(1.8,.16,1.1,0,1.05,0,wood);for(const a of [-.75,.75])for(const b of [-.42,.42])box(.13,1,.13,a,.5,b,wood);box(.9,.1,.45,0,1.2,0,stone)}
  if(kind==='fence'){box(4,.13,.14,0,.7,0,wood);box(4,.13,.14,0,1.25,0,wood);for(let a=-1.8;a<=1.8;a+=.6)box(.12,1.5,.16,a,.75,0,plank);addCollider(x,z,2,.15,.2)}
  if(kind==='torch'){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.1,1.8,7),wood);pole.position.y=.9;g.add(pole);const flame=new THREE.Mesh(new THREE.ConeGeometry(.22,.65,7),new THREE.MeshBasicMaterial({color:0xff9a36}));flame.position.y=2;g.add(flame);const light=new THREE.PointLight(0xff9b48,1.1,9);light.position.y=2;g.add(light)}
- if(kind==='farm'){box(2.5,.22,2,0,.15,0,wood);box(2.2,.12,1.7,0,.3,0,mat(0x59472d));for(let a=-.7;a<=.7;a+=.7){const crop=new THREE.Mesh(new THREE.ConeGeometry(.16,.65,5),mat(farmGrowth>=100?0xd2b45d:0x6f8b42));crop.position.set(a,.68,0);crop.scale.setScalar(.35+Math.max(0,Math.min(100,farmGrowth))/100*.65);g.add(crop);cropMeshes.push(crop)}}
- g.position.set(x,height(x,z),z);g.rotation.y=rot;scene.add(g);builtObjects.push({kind,x,z,rot,mesh:g,colliders:colliderRefs,contents:kind==='chest'?{wood:contents?.wood||0,stone:contents?.stone||0,herbs:contents?.herbs||0,food:contents?.food||0}:null,growth:kind==='farm'?Math.max(0,Math.min(100,Number(farmGrowth)||0)):0,cropMeshes});return g
+ if(kind==='farm'){box(2.5,.22,2,0,.15,0,wood);box(2.2,.12,1.7,0,.3,0,mat(0x59472d));for(let a=-.7;a<=.7;a+=.7){const crop=new THREE.Mesh(new THREE.ConeGeometry(.16,.65,5),mat(0x6f8b42));crop.position.set(a,.68,0);g.add(crop)}}
+ g.position.set(x,height(x,z),z);g.rotation.y=rot;scene.add(g);builtObjects.push({kind,x,z,rot,mesh:g,colliders:colliderRefs,contents:kind==='chest'?{wood:contents?.wood||0,stone:contents?.stone||0,herbs:contents?.herbs||0,food:contents?.food||0}:null});return g
 }
 function dismantleNearest(){
  let best=null,dist=7;
@@ -161,7 +161,7 @@ function buildAt(kind){
  if(game.wood<item.wood||game.stone<item.stone){toast('تحتاج '+item.wood+' خشب و'+item.stone+' حجر.');return}
  const x=Math.round((target.x+Math.sin(yaw)*5)/2)*2,z=Math.round((target.z+Math.cos(yaw)*5)/2)*2;
  if(Math.hypot(x-target.x,z-target.z)<2.8||blockedPosition(x,z,.9)){toast('المكان غير مناسب للبناء؛ ابتعد عن العوائق.');return}
- game.wood-=item.wood;game.stone-=item.stone;const rot=game.buildRotation||0;const contents=kind==='chest'?{wood:0,stone:0,herbs:0,food:0}:null;placeBuild(kind,x,z,rot,false,contents,0);game.placedBuilds.push({kind,x,z,rot,...(contents?{contents}:{}),...(kind==='farm'?{growth:0}:{})});game.xp+=8;saveGame();toast('تم بناء '+item.name+' بنجاح.');openPanel('build')
+ game.wood-=item.wood;game.stone-=item.stone;const rot=game.buildRotation||0;const contents=kind==='chest'?{wood:0,stone:0,herbs:0,food:0}:null;placeBuild(kind,x,z,rot,false,contents);game.placedBuilds.push({kind,x,z,rot,...(contents?{contents}:{})});game.xp+=8;saveGame();toast('تم بناء '+item.name+' بنجاح.');openPanel('build')
 }
 
 function rock(x,z,s){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(1,1),mat(0x77786b));o.position.set(x,height(x,z)+s*.4,z);o.scale.set(s*1.2,s*.7,s);o.rotation.set(Math.random(),Math.random(),Math.random());o.castShadow=true;scene.add(o);addCollider(x,z,s*1.15,s*.95,.28)}
@@ -339,7 +339,7 @@ const game={health:100,stamina:100,hunger:100,thirst:100,wood:0,stone:0,herbs:3,
 try{Object.assign(game,JSON.parse(localStorage.getItem('shadowProtocolSave')||'{}'))}catch{}
 function saveGame(){try{localStorage.setItem('shadowProtocolSave',JSON.stringify(game))}catch{}}
 if(!Array.isArray(game.placedBuilds))game.placedBuilds=[];if(typeof game.buildRotation!=='number')game.buildRotation=0;
-for(const saved of game.placedBuilds){if(saved&&buildCatalog[saved.kind])placeBuild(saved.kind,saved.x,saved.z,saved.rot||0,true,saved.contents||null,saved.growth||0)}
+for(const saved of game.placedBuilds){if(saved&&buildCatalog[saved.kind])placeBuild(saved.kind,saved.x,saved.z,saved.rot||0,true,saved.contents||null)}
 function panelButton(label,action){return '<button class="game-action" data-action="'+action+'">'+label+'</button>'}
 function openChest(chest){
  const c=chest.contents;const labels={wood:'الخشب',stone:'الحجر',herbs:'الأعشاب',food:'الطعام'};
@@ -387,7 +387,6 @@ document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',
 $('#interact-prompt').addEventListener('click',interact);
 function interact(){
  const chest=builtObjects.filter(b=>b.kind==='chest').sort((a,b)=>Math.hypot(target.x-a.x,target.z-a.z)-Math.hypot(target.x-b.x,target.z-b.z))[0];if(chest&&Math.hypot(target.x-chest.x,target.z-chest.z)<4.5){openChest(chest);return}
- const farm=builtObjects.filter(b=>b.kind==='farm').sort((a,b)=>Math.hypot(target.x-a.x,target.z-a.z)-Math.hypot(target.x-b.x,target.z-b.z))[0];if(farm&&Math.hypot(target.x-farm.x,target.z-farm.z)<4.5){if(farm.growth<100){toast('المحصول ينمو الآن · '+Math.floor(farm.growth)+'٪');return}game.food+=3;game.xp+=8;farm.growth=0;for(const crop of farm.cropMeshes){crop.scale.setScalar(.35);crop.material.color.setHex(0x6f8b42)}const saved=game.placedBuilds.find(p=>p.kind==='farm'&&Math.abs(p.x-farm.x)<.01&&Math.abs(p.z-farm.z)<.01);if(saved)saved.growth=0;saveGame();toast('حصدت ٣ وحدات طعام من المزرعة!');return}
  const bed=sleepingBeds.find(b=>target.distanceTo(b.world)<3.2);if(bed){$('#panel-kicker').textContent='راحة المسافر';$('#panel-title').textContent='سريرك داخل البيت';$('#panel-content').innerHTML='<p>استرح في فراشك الدافئ حتى شروق الشمس.</p>'+panelButton('النوم حتى الصباح · استعادة الصحة والطاقة','sleep');$('#side-panel').classList.add('open');return}
  const gate=regionGates.find(g=>target.distanceTo(g.mesh.position)<7);if(gate){$('#panel-kicker').textContent='بوابة إقليمية';$('#panel-title').textContent=gate.name;$('#panel-content').innerHTML='<p>هذه بوابة '+gate.name+'. استكشف معالم الإقليم وطقسه الخاص.</p>';$('#side-panel').classList.add('open');return}
 let nearest=null,dist=8;
@@ -400,7 +399,7 @@ toast('اقترب من مورد أو من موقد الحراسة للتفاعل
 $('#begin').addEventListener('click',()=>{entered=true;$('#hero').style.display='none';$('.region-card').style.display='none';$('#hud').classList.add('active');$('#mobile-controls').style.display='block';$('#control-hint').classList.add('visible');setTimeout(()=>$('#control-hint').classList.remove('visible'),6500);toast('أصبحت البرية ملكك. راقب حافة الغابة.');});
 function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-(animate.last||now))/1000,.04);animate.last=now;elapsed+=dt;clockMinutes+=dt*1.4;if(clockMinutes>=1440){clockMinutes-=1440;day++}
 const hour=Math.floor(clockMinutes/60),minute=Math.floor(clockMinutes%60);$('#world-clock').textContent='اليوم '+String(day+1).padStart(2,'0')+' · '+String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
-updateSurvival(dt,hour);for(const farm of builtObjects){if(!entered||farm.kind!=='farm'||farm.growth>=100)continue;farm.growth=Math.min(100,farm.growth+dt*.28);const scale=.35+farm.growth/100*.65;for(const crop of farm.cropMeshes){crop.scale.setScalar(scale);crop.material.color.setHex(farm.growth>=100?0xd2b45d:0x6f8b42)}const saved=game.placedBuilds.find(p=>p.kind==='farm'&&Math.abs(p.x-farm.x)<.01&&Math.abs(p.z-farm.z)<.01);if(saved)saved.growth=farm.growth}const night=hour<6||hour>19;const daylight=THREE.MathUtils.clamp((Math.sin((hour-6)/13*Math.PI)+.12),.12,1);sun.intensity=(.22+daylight*2.45)*(weatherKind==='cloud'||weatherKind==='fog'?.72:weatherKind==='rain'||weatherKind==='snow'?.58:1);sun.color.set(weatherKind==='snow'?0xdceeff:night?0x91a9d4:0xffdfad);renderer.toneMappingExposure=night?.72:weatherKind==='snow'?1.2:1.12;
+updateSurvival(dt,hour);const night=hour<6||hour>19;const daylight=THREE.MathUtils.clamp((Math.sin((hour-6)/13*Math.PI)+.12),.12,1);sun.intensity=(.22+daylight*2.45)*(weatherKind==='cloud'||weatherKind==='fog'?.72:weatherKind==='rain'||weatherKind==='snow'?.58:1);sun.color.set(weatherKind==='snow'?0xdceeff:night?0x91a9d4:0xffdfad);renderer.toneMappingExposure=night?.72:weatherKind==='snow'?1.2:1.12;
  const pp=weatherParticles.geo.attributes.position;if(weatherParticles.points.visible){for(let i=0;i<weatherParticles.count;i++){let px=pp.getX(i),py=pp.getY(i),pz=pp.getZ(i);py-=dt*(weatherKind==='snow'?2.2:15);px+=dt*(weatherKind==='snow'?.5:1.3);if(py<0){py=30;px=(Math.random()-.5)*70;pz=(Math.random()-.5)*70}pp.setXYZ(i,px,py,pz)}pp.needsUpdate=true;weatherParticles.points.position.set(target.x,0,target.z)}
  const regionNow=localRegion(target.x,target.z);if(regionNow!==lastRegion){lastRegion=regionNow;if(regionNow==='مرتفعات الصقيع')setWeather('snow');else if(regionNow==='مستنقعات الضباب')setWeather('fog');else if(regionNow==='سهول الرماد')setWeather('dust');else setWeather('clear')}
  const sky=night?0x17232a:weatherKind==='snow'?0xb9cbd0:weatherKind==='fog'?0x879b98:weatherKind==='rain'?0x536c75:weatherKind==='dust'?0xb68b60:weatherKind==='cloud'?0x899b9a:0x9bb6b0;scene.background.set(sky);scene.fog.color.set(sky);scene.fog.density=night?.014:weatherKind==='fog'?.024:weatherKind==='rain'?.018:weatherKind==='dust'?.016:weatherKind==='cloud'||weatherKind==='snow'?.012:.009;hemi.intensity=night?.55:weatherKind==='snow'?2.1:1.8;
@@ -412,8 +411,8 @@ const camDist=entered?distance:distance;cameraGoal.set(target.x+Math.sin(yaw)*Ma
 flame.scale.setScalar(.88+Math.sin(elapsed*13)*.13);glow.intensity=2+Math.sin(elapsed*17)*.65;const water=riverGeo.attributes.position;for(let i=0;i<water.count;i++){const x=water.getX(i),z=water.getZ(i);water.setY(i,height(x,z)+.22+Math.sin(z*.22+elapsed*2.8+x*.13)*.045+Math.sin(z*.08-elapsed*1.7)*.025)}water.needsUpdate=true;riverGeo.computeVertexNormals();riverMat.opacity=.88+Math.sin(elapsed*1.4)*.035;
 let insideHouse=null;for(const h of houseInstances){const lx=(target.x-h.x)/h.scale,lz=(target.z-h.z)/h.scale;if(Math.abs(lx)<3.25&&Math.abs(lz)<2.65){insideHouse=h;break}}for(const h of houseInstances)h.roof.visible=h!==insideHouse;
  const bedNear=sleepingBeds.some(b=>target.distanceTo(b.world)<3.2);
- const near=bedNear||builtObjects.some(b=>(b.kind==='chest'||b.kind==='farm')&&Math.hypot(target.x-b.x,target.z-b.z)<4.5)||target.distanceTo(fire.position)<10||resourceNodes.some(n=>!n.used&&target.distanceTo(n.mesh.position)<7)||villagers.some(v=>target.distanceTo(v.mesh.position)<6)||wildlife.some(a=>target.distanceTo(a.mesh.position)<4)||regionGates.some(g=>target.distanceTo(g.mesh.position)<7);
- $('#interact-prompt').style.display=entered&&near?'block':'none';if(entered&&bedNear)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع السرير للنوم حتى الصباح';else if(entered&&builtObjects.some(b=>b.kind==='farm'&&Math.hypot(target.x-b.x,target.z-b.z)<4.5))$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع المزرعة لمتابعة المحصول أو حصاده';else if(entered&&near)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع المكان أو المورد القريب';renderer.render(scene,camera)}
+ const near=bedNear||builtObjects.some(b=>b.kind==='chest'&&Math.hypot(target.x-b.x,target.z-b.z)<4.5)||target.distanceTo(fire.position)<10||resourceNodes.some(n=>!n.used&&target.distanceTo(n.mesh.position)<7)||villagers.some(v=>target.distanceTo(v.mesh.position)<6)||wildlife.some(a=>target.distanceTo(a.mesh.position)<4)||regionGates.some(g=>target.distanceTo(g.mesh.position)<7);
+ $('#interact-prompt').style.display=entered&&near?'block':'none';if(entered&&bedNear)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع السرير للنوم حتى الصباح';else if(entered&&near)$('#interact-prompt').innerHTML='<span>ف</span> تفاعل مع المكان أو المورد القريب';renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight)});
 setTimeout(()=>$('#loading').classList.add('hidden'),1100);
