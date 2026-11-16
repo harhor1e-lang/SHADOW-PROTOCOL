@@ -327,6 +327,78 @@ const wing=new THREE.Mesh(new THREE.BoxGeometry(2.5,.22,27),mat(0xd5d8d6));wing.
 for(const side of [-1,1]){const engine=new THREE.Mesh(new THREE.CylinderGeometry(.65,.65,2.8,12),mat(0x69777e));engine.rotation.x=Math.PI/2;engine.position.set(1,-.8,side*6.5);plane.add(engine);}
 for(const x of [-7,5]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.18,10),mat(0x17191b));wheel.rotation.z=Math.PI/2;wheel.position.set(x,-1.1,0);plane.add(wheel);}
 
+// Airport operations: taxi lanes, gate bridges, apron lights, service fleet and passenger parking.
+const airportLights=[];
+const airportLampMat=new THREE.MeshStandardMaterial({color:0xffe6a6,emissive:0xffc45a,emissiveIntensity:1.5});
+for(let x=-55;x<=55;x+=11){
+ const taxiLamp=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),airportLampMat);taxiLamp.position.set(x,.55,-15);airport.add(taxiLamp);airportLights.push(taxiLamp);
+ const edgeLamp=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),airportLampMat);edgeLamp.position.set(x,.45,-40);airport.add(edgeLamp);airportLights.push(edgeLamp);
+}
+for(let i=0;i<3;i++){
+ const gateX=-17+i*17;
+ const bridge=new THREE.Group();bridge.position.set(gateX,0,18);airport.add(bridge);
+ const corridor=new THREE.Mesh(new THREE.BoxGeometry(7,2.6,5),mat(0xb7c3c5));corridor.position.set(0,4.3,-3);bridge.add(corridor);
+ const support=new THREE.Mesh(new THREE.BoxGeometry(.45,4,.45),mat(0x59656a));support.position.set(0,2,-3);bridge.add(support);
+ const gateSign=new THREE.Mesh(new THREE.BoxGeometry(4,1.2,.18),mat(0x1b3948));gateSign.position.set(0,6,0);bridge.add(gateSign);
+ addArabicSign(bridge,'بوابة '+(i+1),'صالة المغادرة',3.8,1,0,6,0.12);
+}
+const hangar=new THREE.Group();hangar.position.set(-48,0,5);airport.add(hangar);
+const hangarBody=new THREE.Mesh(new THREE.BoxGeometry(19,9,17),mat(0x9da8a8));hangarBody.position.y=4.5;hangar.add(hangarBody);
+const hangarDoor=new THREE.Mesh(new THREE.BoxGeometry(12,6,.2),mat(0x354b58));hangarDoor.position.set(0,3,8.62);hangar.add(hangarDoor);
+addArabicSign(hangar,'حظيرة الطائرات','مطار وتين الدولي',15,1.6,0,7,8.76);
+const airportParking=new THREE.Group();airportParking.position.set(0,0,31);airport.add(airportParking);
+const airportParkFloor=new THREE.Mesh(new THREE.BoxGeometry(48,.14,13),mat(0x555d60));airportParkFloor.position.set(0,.08,0);airportParking.add(airportParkFloor);
+for(let i=0;i<9;i++){const stripe=new THREE.Mesh(new THREE.BoxGeometry(.13,.035,9),mat(0xe8e1c9));stripe.position.set(-21+i*5.2,.18,0);airportParking.add(stripe);}
+for(let i=0;i<4;i++){
+ const van=new THREE.Group();van.position.set(-15+i*10,.12,-1);airport.add(van);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(4.8,1.7,2.2),mat([0xe7e7df,0xd6b45f,0x477184,0xb7c1c2][i]));body.position.y=1.1;van.add(body);
+ const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.1,1.1,2.05),mat(0x42606c));cabin.position.set(.7,2.05,0);van.add(cabin);
+ for(const wx of [-1.5,1.5])for(const wz of [-1,1]){const tyre=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.22,10),mat(0x17191b));tyre.rotation.x=Math.PI/2;tyre.position.set(wx,.48,wz);van.add(tyre);}
+}
+addArabicSign(airport,'مواقف المسافرين','مطار وتين الدولي',17,1.4,0,2,38);
+
+// A second aviation facility: a marked city heliport with a rescue helicopter.
+const heliport=new THREE.Group();heliport.position.set(225,0,-205);scene.add(heliport);
+const helipad=new THREE.Mesh(new THREE.CylinderGeometry(18,18,.25,48),mat(0x555e61));helipad.position.y=.12;heliport.add(helipad);
+const padRing=new THREE.Mesh(new THREE.TorusGeometry(15,.35,8,48),mat(0xe8e5d7));padRing.rotation.x=Math.PI/2;padRing.position.y=.28;heliport.add(padRing);
+const hMark=new THREE.Mesh(new THREE.BoxGeometry(2.8,.08,10),mat(0xf4f0dc));hMark.position.set(0,.3,0);heliport.add(hMark);
+const hBar=new THREE.Mesh(new THREE.BoxGeometry(8,.08,2),mat(0xf4f0dc));hBar.position.set(0,.3,0);heliport.add(hBar);
+const heliBuilding=new THREE.Mesh(new THREE.BoxGeometry(25,5,12),mat(0xd0d1c8));heliBuilding.position.set(0,2.5,28);heliport.add(heliBuilding);
+addArabicSign(heliport,'مهبط وتين الجوي','طريق الخدمات الشمالية',19,1.7,0,4.4,34.1);
+const helicopter=new THREE.Group();helicopter.position.set(0,2,0);heliport.add(helicopter);
+const heliCabin=new THREE.Mesh(new THREE.SphereGeometry(2.4,16,12),mat(0xd9d8c8));heliCabin.scale.set(1.55,.8,1);helicopter.add(heliCabin);
+const heliNose=new THREE.Mesh(new THREE.SphereGeometry(1.3,14,10),new THREE.MeshStandardMaterial({color:0x496c7a,metalness:.25,roughness:.2}));heliNose.scale.set(.8,.65,.7);heliNose.position.z=2;helicopter.add(heliNose);
+const heliTail=new THREE.Mesh(new THREE.CylinderGeometry(.18,.32,7,8),mat(0xb9b9ac));heliTail.rotation.x=Math.PI/2;heliTail.position.z=-4.2;helicopter.add(heliTail);
+const heliFin=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.8,.18),mat(0x9d4037));heliFin.position.set(0,1,-7.2);helicopter.add(heliFin);
+const heliRotor=new THREE.Group();heliRotor.position.y=2.3;helicopter.add(heliRotor);
+for(let i=0;i<4;i++){const blade=new THREE.Mesh(new THREE.BoxGeometry(.42,.09,9),mat(0x252b30));blade.rotation.y=i*Math.PI/2;heliRotor.add(blade);}
+const heliTailRotor=new THREE.Group();heliTailRotor.position.set(0,.9,-7.2);helicopter.add(heliTailRotor);
+for(let i=0;i<3;i++){const blade=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,2.1),mat(0x252b30));blade.rotation.y=i*Math.PI*2/3;heliTailRotor.add(blade);}
+for(const z of [-1.5,1.5]){const skid=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,5,8),mat(0x333a3d));skid.rotation.z=Math.PI/2;skid.position.set(0,-1.8,z);helicopter.add(skid);}
+const heliBeacon=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),new THREE.MeshStandardMaterial({color:0xff3830,emissive:0xaa1008,emissiveIntensity:1.8}));heliBeacon.position.set(0,1.2,-1.5);helicopter.add(heliBeacon);
+
+// More named residential buildings with visible street addresses.
+const residentialBlocks=[];
+const residenceData=[
+ ['مجمع النخيل السكني','شارع النخيل - القطاع السكني',150,165,0xd1c5ae,20],
+ ['عمارات الرافدين','شارع الرافدين - القطاع السكني',190,165,0xaab9bc,24],
+ ['مجمع الواجهة','شارع النهر - القطاع السكني',230,165,0xc8b9a2,28],
+ ['برج وتين السكني','شارع الأبراج - القطاع السكني',270,165,0x9daeb5,34]
+];
+for(const [name,address,x,z,color,height] of residenceData){
+ const block=new THREE.Group();block.position.set(x,0,z);scene.add(block);
+ const towerBody=new THREE.Mesh(new THREE.BoxGeometry(22,height,19),mat(color));towerBody.position.y=height/2;towerBody.castShadow=true;block.add(towerBody);
+ const roof=new THREE.Mesh(new THREE.BoxGeometry(23,.8,20),mat(0x48565c));roof.position.y=height+.4;block.add(roof);
+ const floors=Math.floor(height/3.5);
+ for(let floor=0;floor<floors;floor++)for(let col=-2;col<=2;col++){
+  const win=new THREE.Mesh(new THREE.BoxGeometry(2.1,1.45,.1),windowMat);win.position.set(col*3.7,2.3+floor*3.5,9.58);block.add(win);
+  const sideWin=win.clone();sideWin.rotation.y=Math.PI/2;sideWin.position.set(11.08,2.3+floor*3.5,col*3.2);block.add(sideWin);
+ }
+ const entrance=new THREE.Mesh(new THREE.BoxGeometry(3,3,.2),mat(0x334a55));entrance.position.set(0,1.5,9.7);block.add(entrance);
+ addArabicSign(block,name,address,18,1.7,0,Math.min(height-2,8),9.82);
+ residentialBlocks.push({group:block,name,address});
+}
+
 const trafficSignals=[];
 function trafficSignal(x,z,rotation=0){const pole=new THREE.Group();pole.position.set(x,0,z);pole.rotation.y=rotation;const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.17,5.5,8),lampMetal);post.position.y=2.75;pole.add(post);const arm=new THREE.Mesh(new THREE.BoxGeometry(.13,.13,2.3),lampMetal);arm.position.set(0,5.35,1);pole.add(arm);const housing=new THREE.Mesh(new THREE.BoxGeometry(.72,1.85,.48),mat(0x20272b));housing.position.set(0,4.45,2.05);pole.add(housing);const lenses=[],materials=[];for(let i=0;i<3;i++){const material=new THREE.MeshStandardMaterial({color:[0xe33b32,0xe7b83d,0x36bd68][i],emissive:[0x8b100b,0x79520b,0x087a31][i],emissiveIntensity:.08});const lens=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),material);lens.position.set(0,5.05-i*.6,2.31);pole.add(lens);lenses.push(lens);materials.push(material);}scene.add(pole);trafficSignals.push({lenses,materials,offset:trafficSignals.length%2?9:0});}
 trafficSignal(-9,0,0);trafficSignal(9,0,Math.PI);trafficSignal(0,-9,Math.PI/2);trafficSignal(0,9,-Math.PI/2);
@@ -371,6 +443,9 @@ function interactWorld(){
  if(nearShop){openShop();return;}
  if(player.position.distanceTo(restaurant.position)<14){showEconomy('مطعم وتين','أهلاً بك! اختر وجبتك من مطعم المدينة.',[{label:'وجبة ساخنة - 80',run:()=>{if(wallet<80){document.querySelector('#economyInfo').textContent='رصيدك لا يكفي.';return;}wallet-=80;foodStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم تجهيز وجبتك. صحة جيدة!';}},{label:'ماء بارد - 20',run:()=>{if(wallet<20){document.querySelector('#economyInfo').textContent='رصيدك لا يكفي.';return;}wallet-=20;waterStock++;refreshWallet();document.querySelector('#economyInfo').textContent='تم شراء الماء البارد.';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
  if(player.position.distanceTo(airport.position)<42){showEconomy('مطار وتين الدولي','العنوان: طريق المطار - الضواحي الغربية. المطار يحتوي على مدرج وبرج مراقبة وصالة سفر وطائرة ركاب.',[{label:'استكشاف المطار',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='أهلاً بك في مطار وتين الدولي';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
+ if(player.position.distanceTo(heliport.position)<28){showEconomy('مهبط وتين الجوي','العنوان: طريق الخدمات الشمالية. مهبط للطوارئ والنقل الجوي مع مروحية إنقاذ.',[{label:'تفقد المروحية',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='مروحية الإنقاذ جاهزة في مهبط وتين';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
+ const nearResidence=residentialBlocks.find(item=>player.position.distanceTo(item.group.position)<19);
+ if(nearResidence){showEconomy(nearResidence.name,'العنوان: '+nearResidence.address+'. مبنى سكني متعدد الطوابق في مدينة وتين.',[{label:'دخول المبنى',run:()=>{economyPanel.style.display='none';document.querySelector('#hint').textContent='وصلت إلى '+nearResidence.name+' — قريباً: شقق داخلية قابلة للاستكشاف';}},{label:'إغلاق',run:()=>economyPanel.style.display='none'}]);return;}
  if(player.position.distanceTo(workPoint)<12){startWork();return;}
  if(player.position.distanceTo(homePoint)<12){restAtHome();return;}
  const nearVisitor=player.position.distanceTo(visitor.position)<5;
@@ -382,7 +457,7 @@ if(interactButton)interactButton.addEventListener('click',interactWorld);
 addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e')interactWorld()});
 
 const clock=new THREE.Clock();const desired=new THREE.Vector3();let frame=0,walkPhase=0;
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);dayClock=(dayClock+dt*.006)%(Math.PI*2);signalClock=(signalClock+dt)%18;for(const signal of trafficSignals){const phase=(signalClock+signal.offset)%18;const active=phase<7?2:phase<9?1:0;signal.materials.forEach((material,index)=>material.emissiveIntensity=index===active?2.2:.06);}const daylight=.48+.42*Math.sin(dayClock-Math.PI/2);sun.intensity=1.1+daylight*2.1;scene.background.setHSL(.55,.22,.18+daylight*.32);scene.fog.color.copy(scene.background);wheelRing.rotation.z+=dt*.22;carouselRoof.rotation.y+=dt*.65;carouselBase.rotation.y+=dt*.65;for(let i=0;i<citizens.length;i++){const c=citizens[i];c.phase+=dt*c.speed;const p=c.npc.position;if(c.route<2){p.z=c.origin.z+Math.sin(c.phase)*11;p.x=c.origin.x+Math.cos(c.phase*.5)*2;}else{p.x=c.origin.x+Math.sin(c.phase)*11;p.z=c.origin.z+Math.cos(c.phase*.5)*2;}c.npc.rotation.y=c.route<2?(Math.cos(c.phase)>=0?0:Math.PI):(Math.cos(c.phase)>=0?Math.PI/2:-Math.PI/2);c.legs.forEach((leg,n)=>leg.rotation.x=Math.sin(c.phase*4+n*Math.PI)*.55);c.arms.forEach((arm,n)=>arm.rotation.x=-Math.sin(c.phase*4+n*Math.PI)*.35);}for(const trafficItem of traffic){const q=trafficItem.vehicle;const along=(trafficItem.progress-.5)*540*trafficItem.direction;const phase=(signalClock+(trafficItem.axis==='z'?0:9))%18;const approaching=trafficItem.roadLine===0&&(trafficItem.direction>0?along>-18&&along<-5:along<18&&along>5);const waiting=approaching&&phase>=7;if(!waiting)trafficItem.progress=(trafficItem.progress+dt*trafficItem.speed/540)%1;const nextAlong=(trafficItem.progress-.5)*540*trafficItem.direction;if(trafficItem.axis==='z'){q.position.set(trafficItem.roadLine+trafficItem.lane,.02,waiting?along:nextAlong);q.rotation.y=trafficItem.direction>0?0:Math.PI;}else{q.position.set(waiting?along:nextAlong,.02,trafficItem.roadLine+trafficItem.lane);q.rotation.y=trafficItem.direction>0?Math.PI/2:-Math.PI/2;}}const coasterT=(dayClock*1.7)%(Math.PI*2);const coasterPoint=coasterPath.getPoint((coasterT/(Math.PI*2)));coasterCar.position.copy(coasterPoint);const forward=(keys.w||keys.arrowup?-1:0)+(keys.s||keys.arrowdown?1:0)-joy.y;const side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;const moving=Math.abs(forward)+Math.abs(side)>.08;const target=inCar?car:player;let vehicleStopped=false;if(moving&&!inCar)walkPhase+=dt*(run?12:7);const speed=inCar?22:(run?10:5.2);if(moving&&inCar&&fuelLevel>0)fuelLevel=Math.max(0,fuelLevel-dt*.16);const fuelHud=document.querySelector('#fuelLevel');if(fuelHud)fuelHud.textContent=Math.round(fuelLevel)+'٪';if(inCar&&fuelLevel<=0){document.querySelector('#hint').textContent='نفد الوقود! توجه إلى محطة الوقود سيراً.';inCar=false;vehicleStopped=true;player.position.copy(car.position).add(new THREE.Vector3(2,0,0));}if(moving&&!vehicleStopped){const angle=Math.atan2(side,-forward);target.rotation.y=angle+yaw;const dir=new THREE.Vector3(Math.sin(target.rotation.y),0,Math.cos(target.rotation.y));target.position.addScaledVector(dir,speed*dt*Math.min(1,Math.hypot(forward,side)));target.position.x=THREE.MathUtils.clamp(target.position.x,-285,285);target.position.z=THREE.MathUtils.clamp(target.position.z,-285,285)}if(inCar){player.position.copy(car.position);player.visible=false}else player.visible=true;const gait=moving&&!inCar?1:0;legPivots.forEach((p,i)=>{p.rotation.x=Math.sin(walkPhase+i*Math.PI)*.62*gait;p.rotation.z=0});armPivots.forEach((p,i)=>{p.rotation.x=-Math.sin(walkPhase+i*Math.PI)*.48*gait;p.rotation.z=(i===0?-.08:.08)});
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);dayClock=(dayClock+dt*.006)%(Math.PI*2);signalClock=(signalClock+dt)%18;for(const signal of trafficSignals){const phase=(signalClock+signal.offset)%18;const active=phase<7?2:phase<9?1:0;signal.materials.forEach((material,index)=>material.emissiveIntensity=index===active?2.2:.06);}const daylight=.48+.42*Math.sin(dayClock-Math.PI/2);sun.intensity=1.1+daylight*2.1;scene.background.setHSL(.55,.22,.18+daylight*.32);scene.fog.color.copy(scene.background);wheelRing.rotation.z+=dt*.22;carouselRoof.rotation.y+=dt*.65;carouselBase.rotation.y+=dt*.65;heliRotor.rotation.y+=dt*8;heliTailRotor.rotation.y+=dt*11;const airportPulse=.75+Math.sin(dayClock*8)*.55;airportLights.forEach((lamp,i)=>lamp.material=airportLampMat);airportLampMat.emissiveIntensity=airportPulse;heliBeacon.material.emissiveIntensity=.5+Math.abs(Math.sin(dayClock*12))*2;for(let i=0;i<citizens.length;i++){const c=citizens[i];c.phase+=dt*c.speed;const p=c.npc.position;if(c.route<2){p.z=c.origin.z+Math.sin(c.phase)*11;p.x=c.origin.x+Math.cos(c.phase*.5)*2;}else{p.x=c.origin.x+Math.sin(c.phase)*11;p.z=c.origin.z+Math.cos(c.phase*.5)*2;}c.npc.rotation.y=c.route<2?(Math.cos(c.phase)>=0?0:Math.PI):(Math.cos(c.phase)>=0?Math.PI/2:-Math.PI/2);c.legs.forEach((leg,n)=>leg.rotation.x=Math.sin(c.phase*4+n*Math.PI)*.55);c.arms.forEach((arm,n)=>arm.rotation.x=-Math.sin(c.phase*4+n*Math.PI)*.35);}for(const trafficItem of traffic){const q=trafficItem.vehicle;const along=(trafficItem.progress-.5)*540*trafficItem.direction;const phase=(signalClock+(trafficItem.axis==='z'?0:9))%18;const approaching=trafficItem.roadLine===0&&(trafficItem.direction>0?along>-18&&along<-5:along<18&&along>5);const waiting=approaching&&phase>=7;if(!waiting)trafficItem.progress=(trafficItem.progress+dt*trafficItem.speed/540)%1;const nextAlong=(trafficItem.progress-.5)*540*trafficItem.direction;if(trafficItem.axis==='z'){q.position.set(trafficItem.roadLine+trafficItem.lane,.02,waiting?along:nextAlong);q.rotation.y=trafficItem.direction>0?0:Math.PI;}else{q.position.set(waiting?along:nextAlong,.02,trafficItem.roadLine+trafficItem.lane);q.rotation.y=trafficItem.direction>0?Math.PI/2:-Math.PI/2;}}const coasterT=(dayClock*1.7)%(Math.PI*2);const coasterPoint=coasterPath.getPoint((coasterT/(Math.PI*2)));coasterCar.position.copy(coasterPoint);const forward=(keys.w||keys.arrowup?-1:0)+(keys.s||keys.arrowdown?1:0)-joy.y;const side=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;const moving=Math.abs(forward)+Math.abs(side)>.08;const target=inCar?car:player;let vehicleStopped=false;if(moving&&!inCar)walkPhase+=dt*(run?12:7);const speed=inCar?22:(run?10:5.2);if(moving&&inCar&&fuelLevel>0)fuelLevel=Math.max(0,fuelLevel-dt*.16);const fuelHud=document.querySelector('#fuelLevel');if(fuelHud)fuelHud.textContent=Math.round(fuelLevel)+'٪';if(inCar&&fuelLevel<=0){document.querySelector('#hint').textContent='نفد الوقود! توجه إلى محطة الوقود سيراً.';inCar=false;vehicleStopped=true;player.position.copy(car.position).add(new THREE.Vector3(2,0,0));}if(moving&&!vehicleStopped){const angle=Math.atan2(side,-forward);target.rotation.y=angle+yaw;const dir=new THREE.Vector3(Math.sin(target.rotation.y),0,Math.cos(target.rotation.y));target.position.addScaledVector(dir,speed*dt*Math.min(1,Math.hypot(forward,side)));target.position.x=THREE.MathUtils.clamp(target.position.x,-285,285);target.position.z=THREE.MathUtils.clamp(target.position.z,-285,285)}if(inCar){player.position.copy(car.position);player.visible=false}else player.visible=true;const gait=moving&&!inCar?1:0;legPivots.forEach((p,i)=>{p.rotation.x=Math.sin(walkPhase+i*Math.PI)*.62*gait;p.rotation.z=0});armPivots.forEach((p,i)=>{p.rotation.x=-Math.sin(walkPhase+i*Math.PI)*.48*gait;p.rotation.z=(i===0?-.08:.08)});
 const focus=inCar?car:player;desired.set(focus.position.x+Math.sin(focus.rotation.y)*-10,focus.position.y+7,focus.position.z+Math.cos(focus.rotation.y)*-10);camera.position.lerp(desired,1-Math.exp(-4*dt));camera.lookAt(focus.position.x,focus.position.y+1.5,focus.position.z);
 frame+=dt;if(frame>5){frame=0;const d=Math.hypot(player.position.x,player.position.z);document.querySelector('#location').textContent=d<100?'وسط وتين':player.position.z<-180?'واجهة الميناء':'الأحياء الجديدة'}
 renderer.render(scene,camera)}
