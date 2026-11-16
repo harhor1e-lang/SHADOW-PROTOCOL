@@ -94,7 +94,7 @@ const sun=new THREE.DirectionalLight(0xffe0b0,3.0);sun.position.set(-90,150,80);
 const mat=(color,roughness=.86)=>new THREE.MeshStandardMaterial({color,roughness});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),mat(0x788b69));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 const roadMat=mat(0x30383d),lineMat=mat(0xd7cba7),sideMat=mat(0x9a9a88);
-function road(x,z,w,d){const r=new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),roadMat);r.position.set(x,.06,z);r.receiveShadow=true;scene.add(r);const horizontal=w>d;for(let p=-Math.max(w,d)/2+4;p<Math.max(w,d)/2;p+=9){const l=new THREE.Mesh(new THREE.BoxGeometry(horizontal?3:.12,.025,horizontal?.13:3),lineMat);l.position.set(x+(horizontal?p:0),.13,z+(horizontal?0:p));scene.add(l)}}
+function road(x,z,w,d){const r=new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),roadMat);r.position.set(x,.06,z);r.receiveShadow=true;scene.add(r);const horizontal=w>d;for(const side of [-1,1]){const walk=new THREE.Mesh(new THREE.BoxGeometry(horizontal?w:2.8,.16,horizontal?2.8:d),sideMat);walk.position.set(x+(horizontal?0:side*(w/2+1.4)),.02,z+(horizontal?side*(d/2+1.4):0));walk.receiveShadow=true;scene.add(walk)}for(let p=-Math.max(w,d)/2+4;p<Math.max(w,d)/2;p+=9){const l=new THREE.Mesh(new THREE.BoxGeometry(horizontal?3:.12,.025,horizontal?.13:3),lineMat);l.position.set(x+(horizontal?p:0),.13,z+(horizontal?0:p));scene.add(l)}}
 for(let i=-2;i<=2;i++){road(0,i*70,600,13);road(i*70,0,13,600)}
 const buildingMaterials=[0xc7b49a,0x9eaeb4,0xd4d0c4,0xb4a18e,0x87999a,0xe0c79e].map(c=>mat(c));
 const windowMat=new THREE.MeshStandardMaterial({color:0x365568,metalness:.25,roughness:.28});
