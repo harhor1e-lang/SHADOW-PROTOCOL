@@ -16,3 +16,27 @@
 .loading-screen{position:absolute;z-index:10;inset:0;background:#101713;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;color:var(--gold);font-size:9px;letter-spacing:.28em;transition:opacity .8s,visibility .8s}.loader-mark{width:58px;height:58px;border:1px solid var(--gold);display:grid;place-items:center;font:18px Cinzel;animation:pulse 1.4s infinite}.loading-screen small{font-size:7px;letter-spacing:.2em;color:#929989}.loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}@keyframes pulse{50%{box-shadow:0 0 28px #c6a15b66}}
 @media(max-width:700px){.topbar{height:65px;padding:0 17px}.world-status{font-size:7px;gap:6px}.world-status b{display:none}.icon-button{display:block}.hero{left:7vw;top:18%;width:86vw}.hero h1{font-size:clamp(43px,12vw,65px);margin:17px 0}.hero-copy{font-size:11px;max-width:300px}.hero-actions{gap:11px;flex-wrap:wrap;margin-top:19px}.gold-button{padding:13px}.chapter{font-size:7px}.hero-foot{margin-top:28px;font-size:7px}.region-card{right:13px;bottom:12%;width:215px;padding:13px}.region-card h2{font-size:15px;margin:11px 0 5px}.region-card p{font-size:9px;margin:6px 0}.region-data{margin-top:10px;padding-top:9px}.region-data small,.region-data b{font-size:7px}.hud-top{top:74px;left:12px;right:12px;display:block}.player-chip{width:max-content;padding:6px 9px}.avatar{width:28px;height:28px}.vitals{margin-top:7px;width:max-content;gap:9px;padding:8px}.vitals>div{grid-template-columns:10px 48px}.hud-bottom{left:12px;right:12px;bottom:12px;display:block}.objective{max-width:245px;padding:9px 12px}.objective b{font-size:12px}.objective span{font-size:8px}.quick-actions{margin-top:8px}.quick-actions button{padding:9px 12px;font-size:8px}.mobile-controls{display:none}.hud.active~.mobile-controls{display:block}.interact-prompt{bottom:27%;font-size:8px}.side-panel{top:78px;right:12px;width:calc(100% - 24px)}}
 @media(orientation:landscape) and (max-height:520px){.hero{top:17%;left:7vw}.hero h1{font-size:clamp(35px,8vh,55px);margin:10px 0}.hero-copy{font-size:9px;max-width:280px}.hero-foot{margin-top:17px}.region-card{bottom:10px;right:15px;padding:11px}.region-card h2{margin:9px 0 4px}.hud-top{top:68px}.hud-bottom{bottom:10px}.mobile-controls{left:10px;bottom:10px}}
+
+/* Arabic localization and right-to-left layout */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Amiri:wght@400;700&display=swap');
+:root{font-family:'Cairo',Tahoma,sans-serif}
+body{direction:rtl}
+.brand,.hero h1,.region-card h2,.objective b,.side-panel h2{font-family:'Amiri','Cairo',serif}
+.topbar{direction:rtl}
+.world-status{direction:rtl}
+.hero{right:9vw;left:auto;text-align:right}
+.overline{justify-content:flex-start}
+.hero-actions{flex-direction:row}
+.region-card{left:4.5vw;right:auto;text-align:right}
+.region-top,.region-data{direction:rtl}
+.hud-top{direction:rtl}
+.hud-bottom{direction:rtl}
+.objective{border-left:0;border-right:2px solid var(--gold);text-align:right}
+.quick-actions{direction:rtl}
+.side-panel{left:4vw;right:auto;text-align:right}
+.panel-close{left:15px;right:auto}
+.side-panel ul{padding-right:18px;padding-left:0}
+.interact-prompt{direction:rtl}
+.toast{direction:rtl}
+@media(max-width:700px){.hero{right:7vw;left:auto}.region-card{left:13px;right:auto}.side-panel{left:12px;right:auto}.hero-actions{justify-content:flex-start}}
+@media(orientation:landscape) and (max-height:520px){.hero{right:7vw;left:auto}}
