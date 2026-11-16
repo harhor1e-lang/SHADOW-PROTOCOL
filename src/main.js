@@ -51,12 +51,26 @@ for(let i=0;i<24;i++){const a=Math.random()*Math.PI*2,r=9+Math.random()*36,x=tar
 const villagers=[];
 function villager(x,z,name,job){const g=new THREE.Group(),torso=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.72,3,7),mat(0x6c5943)),head=new THREE.Mesh(new THREE.SphereGeometry(.24,10,8),mat(0xb98d6d));torso.position.y=.9;head.position.y=1.65;g.add(torso,head);g.position.set(x,height(x,z),z);scene.add(g);villagers.push({mesh:g,name,job,homeX:x,homeZ:z,phase:Math.random()*6});}
 villager(10,5,'سالم','مزارع');villager(17,-3,'مريم','معالجة الأعشاب');villager(-1,-9,'حازم','نجار');villager(23,8,'نورس','حارس');
+
+const wildlife=[];
+function animal(x,z,kind){
+ const g=new THREE.Group(),fur=mat(kind==='غزال'?0x98734d:0x8c8877),dark=mat(0x30271f);
+ const torso=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.55:.34,12,10),fur);torso.scale.set(1.35,.82,.72);torso.position.y=kind==='غزال'?.95:.48;g.add(torso);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(kind==='غزال'?.22:.18,10,8),fur);head.position.set(0,kind==='غزال'?1.45:.62,.48);g.add(head);
+ if(kind==='غزال'){for(const s of [-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,.7,6),dark);leg.position.set(s*.25,.38,.05);g.add(leg);const ear=new THREE.Mesh(new THREE.ConeGeometry(.07,.55,5),dark);ear.position.set(s*.13,1.83,.45);ear.rotation.z=s*.25;g.add(ear)}}
+ else{for(const s of [-1,1]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.09,.42,6),fur);ear.position.set(s*.11,.86,.5);g.add(ear)}}
+ g.position.set(x,height(x,z),z);scene.add(g);wildlife.push({mesh:g,kind,homeX:x,homeZ:z,phase:Math.random()*8,speed:.35+Math.random()*.4});
+}
+for(let i=0;i<5;i++){const a=i/5*Math.PI*2;animal(Math.cos(a)*30+18,Math.sin(a)*28-12,'غزال');}
+for(let i=0;i<7;i++){const a=Math.random()*Math.PI*2,r=12+Math.random()*30;animal(Math.cos(a)*r+10,Math.sin(a)*r+4,'أرنب');}
+
 let survivalTick=0,weatherTick=0;
 function updateSurvival(dt,hour){
 if(!entered)return;survivalTick+=dt;weatherTick+=dt;
-if(survivalTick>18){survivalTick=0;game.hunger=Math.max(0,game.hunger-.8);game.thirst=Math.max(0,game.thirst-1.2);game.stamina=Math.min(100,game.stamina+2);if(game.hunger===0||game.thirst===0)game.health=Math.max(1,game.health-2);$('#health-bar').style.width=game.health+'%';$('#stamina-bar').style.width=game.stamina+'%';$('#hunger-bar').style.width=game.hunger+'%';saveGame()}
+if(survivalTick>18){survivalTick=0;game.hunger=Math.max(0,game.hunger-.8);game.thirst=Math.max(0,game.thirst-1.2);game.stamina=Math.min(100,game.stamina+2);if(game.hunger===0||game.thirst===0)game.health=Math.max(1,game.health-2);$('#health-bar').style.width=game.health+'%';$('#stamina-bar').style.width=game.stamina+'%';$('#hunger-bar').style.width=game.hunger+'%';$('#thirst-bar').style.width=game.thirst+'%';saveGame()}
 if(weatherTick>85){weatherTick=0;const weathers=['صحو','ضباب','مطر خفيف','عاصفة'];const w=weathers[Math.floor(Math.random()*weathers.length)];$('#weather-label').textContent=w;toast('تغير الطقس: '+w)}
 for(const v of villagers){v.mesh.position.x=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3;v.mesh.position.z=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z)}
+for(const a of wildlife){const wander=Math.sin(elapsed*a.speed+a.phase);a.mesh.position.x=a.homeX+wander*2.2;a.mesh.position.z=a.homeZ+Math.cos(elapsed*a.speed*.7+a.phase)*1.7;a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);a.mesh.rotation.y=Math.atan2(Math.cos(elapsed*a.speed+a.phase),-Math.sin(elapsed*a.speed*.7+a.phase));}
 }
 
 addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key.toLowerCase()==='f')interact()});
@@ -78,6 +92,8 @@ if(which==='journal'){kicker='ملاحظات ميدانية';title='سجل ال�
 if(which==='craft'){kicker='ورشة الصانع';title='الصناعة البدائية';body='<p>حوّل الموارد إلى أدوات تساعدك على البقاء.</p>'+panelButton('صناعة فأس بدائي · ٣ خشب + ٢ حجر','axe')+panelButton('صناعة ضماد · عشب واحد','bandage')+panelButton('تحضير وجبة · طعامان','meal')+panelButton('صناعة رمح خشبي · ٢ خشب','spear')}
 if(which==='market'){kicker='سوق المستوطنة';title='تجارة الوادي';body='<p>تاجر المستوطنة يشتري الموارد ويبيع المؤن.</p>'+panelButton('شراء طعام · ٣ عملات','buyfood')+panelButton('شراء ماء · ٢ عملة','buywater')+panelButton('بيع ٢ خشب · ٤ عملات','sellwood')+panelButton('بيع الأعشاب · ٣ عملات','sellherbs')}
 if(which==='build'){kicker='ورشة البناء';title='ابنِ مأواك الأول';body='<p>ابدأ بتأسيس مكان آمن قبل حلول الظلام.</p>'+panelButton('بناء كوخ خشبي · ٦ خشب + ٣ حجر','hut')+panelButton('إشعال موقد نار · ٢ خشب + حجر','camp')+panelButton('ترقية المأوى · ٤ خشب','upgrade')}
+if(which==='people'){kicker='أهل المستوطنة';title='وجوه الوادي';body=villagers.map(v=>'<div class="person-card"><b>'+v.name+'</b><span>'+v.job+'</span><small>يقيم في المستوطنة · يتجول خلال النهار</small></div>').join('')+'<p>الحياة الاجتماعية ستتوسع مع تطور المستوطنة والعلاقات والمهن.</p>'}
+if(which==='skills'){kicker='تطور الشخصية';title='مهارات البقاء';body='<div class="stat-grid"><div>المستوى <b>'+game.level+'</b></div><div>الخبرة <b>'+game.xp+'</b></div><div>الاكتشاف <b>'+game.discovered+'</b></div><div>الصحة <b>'+Math.round(game.health)+'٪</b></div></div><p>اجمع الموارد، اصنع الأدوات، واستكشف المناطق لزيادة خبرتك.</p>'+panelButton('تأمل واسترح · استعد بعض الطاقة','rest')}
 $('#panel-kicker').textContent=kicker;$('#panel-title').textContent=title;$('#panel-content').innerHTML=body;$('#side-panel').classList.add('open')}
 function gameAction(action){
 const fail=m=>toast('لا تملك الموارد الكافية: '+m);
@@ -92,9 +108,10 @@ if(action==='sellherbs'){if(game.herbs<1)return fail('عشب واحد');game.her
 if(action==='hut'){if(game.wood<6||game.stone<3)return fail('٦ خشب و٣ حجر');game.wood-=6;game.stone-=3;const h=house(target.x+4,target.z+5,.75);game.xp+=40;toast('اكتمل كوخك الأول!');}
 if(action==='camp'){if(game.wood<2||game.stone<1)return fail('خشبان وحجر');game.wood-=2;game.stone--;game.health=Math.min(100,game.health+5);toast('أنشأت موقداً آمناً.');}
 if(action==='upgrade'){if(game.wood<4)return fail('٤ خشب');game.wood-=4;game.level++;game.xp+=30;toast('طورت مأواك وارتفع مستواك.')}
+if(action==='rest'){game.stamina=Math.min(100,game.stamina+35);game.health=Math.min(100,game.health+8);game.thirst=Math.max(0,game.thirst-3);toast('استرحت قليلاً واستعدت عافيتك.')}
 saveGame();const open=$('#side-panel').classList.contains('open');if(open){const panel=whichPanel();openPanel(panel||'inventory')}
 }
-function whichPanel(){const t=$('#panel-title').textContent;if(t==='حقيبة المسافر')return'inventory';if(t==='الصناعة البدائية')return'craft';if(t==='تجارة الوادي')return'market';if(t==='ابنِ مأواك الأول')return'build';return'journal'}
+function whichPanel(){const t=$('#panel-title').textContent;if(t==='حقيبة المسافر')return'inventory';if(t==='الصناعة البدائية')return'craft';if(t==='تجارة الوادي')return'market';if(t==='ابنِ مأواك الأول')return'build';if(t==='وجوه الوادي')return'people';if(t==='مهارات البقاء')return'skills';return'journal'}
 $('#panel-content').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(b)gameAction(b.dataset.action)});
 document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.panel)));$('#panel-close').onclick=()=>$('#side-panel').classList.remove('open');$('#menu-toggle').onclick=()=>openPanel('journal');
 $('#interact-prompt').addEventListener('click',interact);
@@ -102,6 +119,8 @@ function interact(){
 let nearest=null,dist=8;
 for(const n of resourceNodes){const d=target.distanceTo(n.mesh.position);if(d<dist){nearest=n;dist=d}}
 if(nearest){game[nearest.type]+=nearest.amount;nearest.mesh.visible=false;nearest.used=true;game.xp+=5;saveGame();toast('جمعت '+nearest.label+' · '+nearest.amount);if(game.quest===1&&game.wood>=3&&game.stone>=1){game.quest=2;$('#quest-title').textContent='عد إلى المستوطنة وابنِ مأوى';$('#quest-desc').textContent='أصبحت تملك ما يكفي للبدء.'}return}
+let person=null,personDist=7;for(const v of villagers){const d=target.distanceTo(v.mesh.position);if(d<personDist){person=v;personDist=d}}if(person){const lines={'سالم':'وصلت في وقت مناسب. الحقول تحتاج إلى يدين قويتين، والسوق يشتري فائض محصولنا.','مريم':'الأعشاب تنمو قرب الماء. لا تستهِن بالجروح والبرد حين يحل الليل.','حازم':'أستطيع تعليمك البناء، لكن الخشب والحجر أساس كل شيء.','نورس':'لا تبتعد عن النار بعد الغروب. رأيت ظلالاً تتحرك بين الأشجار.'};toast(person.name+': '+lines[person.name]);$('#panel-kicker').textContent='حديث مع أحد السكان';$('#panel-title').textContent=person.name+' · '+person.job;$('#panel-content').innerHTML='<p>'+lines[person.name]+'</p><p>يمكنك زيارة السوق أو جمع الموارد أو تطوير مأواك.</p>';$('#side-panel').classList.add('open');return}
+const animalNear=wildlife.find(a=>target.distanceTo(a.mesh.position)<4);if(animalNear){toast(animalNear.kind+' يراقبك ثم يبتعد بهدوء.');animalNear.homeX+=Math.sign(animalNear.homeX-target.x)*5;animalNear.homeZ+=Math.sign(animalNear.homeZ-target.z)*5;return}
 const d=target.distanceTo(fire.position);if(d<10){game.discovered++;game.quest=Math.max(game.quest,1);saveGame();toast('اكتشاف: آثار حديثة تتجه إلى الغابة الشمالية.');$('#panel-kicker').textContent='اكتشاف جديد';$('#panel-title').textContent='نار كان يفترض أن تنطفئ';$('#panel-content').innerHTML='<p>الرماد دافئ. آثار أقدام حديثة تقود إلى أشجار الصنوبر السوداء. لست أول من وصل إلى هنا.</p><p>بدأت مهمتك التالية: اجمع الخشب والحجر لصناعة أدواتك.</p>';$('#side-panel').classList.add('open');$('#quest-title').textContent='اجمع الخشب والحجر';$('#quest-desc').textContent='اجمع ٣ قطع خشب وحجراً واحداً.';return}
 toast('اقترب من مورد أو من موقد الحراسة للتفاعل.')}
 $('#begin').addEventListener('click',()=>{entered=true;$('#hero').style.display='none';$('.region-card').style.display='none';$('#hud').classList.add('active');$('#mobile-controls').style.display='block';$('#control-hint').classList.add('visible');setTimeout(()=>$('#control-hint').classList.remove('visible'),6500);toast('أصبحت البرية ملكك. راقب حافة الغابة.');});
@@ -114,7 +133,7 @@ walkingBlend=THREE.MathUtils.lerp(walkingBlend,moving?1:0,Math.min(1,dt*9));cons
 if(entered&&!moving&&game.stamina<100)game.stamina=Math.min(100,game.stamina+dt*4);
 const camDist=entered?distance:distance;cameraGoal.set(target.x+Math.sin(yaw)*Math.cos(pitch)*camDist,target.y+Math.sin(pitch)*camDist+4,target.z+Math.cos(yaw)*Math.cos(pitch)*camDist);camera.position.lerp(cameraGoal,Math.min(1,dt*5.5));camera.lookAt(target.x,target.y+1.15,target.z);
 flame.scale.setScalar(.88+Math.sin(elapsed*13)*.13);glow.intensity=2+Math.sin(elapsed*17)*.65;riverMat.opacity=.86+Math.sin(elapsed*1.4)*.05;
-const near=target.distanceTo(fire.position)<10;$('#interact-prompt').style.display=entered&&near?'block':'none';if(entered&&hour>19&&hour<22)$('#weather-label').textContent='حلول الليل';renderer.render(scene,camera)}
+const near=target.distanceTo(fire.position)<10||resourceNodes.some(n=>!n.used&&target.distanceTo(n.mesh.position)<7)||villagers.some(v=>target.distanceTo(v.mesh.position)<6)||wildlife.some(a=>target.distanceTo(a.mesh.position)<4);$('#interact-prompt').style.display=entered&&near?'block':'none';if(entered&&hour>19&&hour<22)$('#weather-label').textContent='حلول الليل';renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight)});
 setTimeout(()=>$('#loading').classList.add('hidden'),1100);
