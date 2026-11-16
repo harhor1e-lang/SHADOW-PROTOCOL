@@ -44,15 +44,57 @@ const riverGeo=new THREE.BufferGeometry(),riverSegments=520,riverAcross=10,river
 for(let iz=0;iz<=riverSegments;iz++){const z=-800+iz*(1600/riverSegments),center=-55+Math.sin(z*.006)*26;for(let ix=0;ix<=riverAcross;ix++){const u=ix/riverAcross,x=center+(u-.5)*18;riverPositions.push(x,height(x,z)+.22,z);if(iz<riverSegments&&ix<riverAcross){const a=iz*(riverAcross+1)+ix,b=a+riverAcross+1;riverIndices.push(a,b,a+1,b,b+1,a+1)}}}
 riverGeo.setAttribute('position',new THREE.Float32BufferAttribute(riverPositions,3));riverGeo.setIndex(riverIndices);riverGeo.computeVertexNormals();const river=new THREE.Mesh(riverGeo,riverMat);river.receiveShadow=true;scene.add(river);const riverBaseY=riverGeo.attributes.position.array.filter((v,i)=>i%3===1);
 function addTree(x,z,s=1){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.16,.28,2.4,7),mat(0x59402b));trunk.position.y=1.2;trunk.castShadow=true;g.add(trunk);for(let j=0;j<3;j++){const crown=new THREE.Mesh(new THREE.ConeGeometry(1.25-j*.16,3.2,7),mat(j===0?0x294b34:0x355d3c));crown.position.y=2.6+j*.65;crown.castShadow=true;g.add(crown)}g.position.set(x,height(x,z),z);g.scale.setScalar(s);scene.add(g)}
-function house(x,z,s=1){const g=new THREE.Group(),wall=new THREE.Mesh(new THREE.BoxGeometry(5,3.1,4.3),mat(0xb69a6d)),roof=new THREE.Mesh(new THREE.ConeGeometry(3.9,2.5,4),mat(0x49382b));wall.position.y=1.55;roof.position.y=4;roof.rotation.y=Math.PI/4;roof.scale.z=.82;[wall,roof].forEach(o=>{o.castShadow=true;o.receiveShadow=true;g.add(o)});const door=new THREE.Mesh(new THREE.BoxGeometry(.9,1.8,.12),mat(0x3d2a20));door.position.set(0,.9,2.2);g.add(door);g.position.set(x,height(x,z),z);g.scale.setScalar(s);scene.add(g);return g}
-function rock(x,z,s){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(1,1),mat(0x77786b));o.position.set(x,height(x,z)+s*.4,z);o.scale.set(s*1.2,s*.7,s);o.rotation.set(Math.random(),Math.random(),Math.random());o.castShadow=true;scene.add(o)}
+// نظام تصادم مكاني يمنع عبور الأجسام الصلبة.
+const collisionCell=12,collisionGrid=new Map();
+function colliderKey(x,z){return Math.floor(x/collisionCell)+','+Math.floor(z/collisionCell)}
+function addCollider(x,z,hx,hz,r=.5){
+ const c={x,z,hx,hz,r};const minX=Math.floor((x-hx-r)/collisionCell),maxX=Math.floor((x+hx+r)/collisionCell),minZ=Math.floor((z-hz-r)/collisionCell),maxZ=Math.floor((z+hz+r)/collisionCell);
+ for(let gx=minX;gx<=maxX;gx++)for(let gz=minZ;gz<=maxZ;gz++){const k=gx+','+gz;if(!collisionGrid.has(k))collisionGrid.set(k,[]);collisionGrid.get(k).push(c)}
+ return c;
+}
+function blockedPosition(x,z,r=.48){
+ const gx=Math.floor(x/collisionCell),gz=Math.floor(z/collisionCell),seen=new Set();
+ for(let ix=gx-1;ix<=gx+1;ix++)for(let iz=gz-1;iz<=gz+1;iz++){
+  const list=collisionGrid.get(ix+','+iz)||[];
+  for(const c of list){if(seen.has(c))continue;seen.add(c);
+   const qx=THREE.MathUtils.clamp(x,c.x-c.hx,c.x+c.hx),qz=THREE.MathUtils.clamp(z,c.z-c.hz,c.z+c.hz);
+   if((x-qx)*(x-qx)+(z-qz)*(z-qz)<(r+c.r)*(r+c.r))return true;
+  }
+ }
+ return false;
+}
+function moveWithCollision(obj,dx,dz,r=.48){
+ let x=obj.position.x,z=obj.position.z;
+ if(!blockedPosition(x+dx,z,r))x+=dx;
+ if(!blockedPosition(x,z+dz,r))z+=dz;
+ obj.position.x=x;obj.position.z=z;
+ return {x,z,moved:Math.abs(x-obj.position.x)+Math.abs(z-obj.position.z)>0};
+}
+function house(x,z,s=1){
+ const g=new THREE.Group(),wallMat=mat(0xb69a6d),roofMat=mat(0x49382b),doorMat=mat(0x3d2a20),windowMat=mat(0x8bb1ad,.3);
+ const addWall=(w,h,d,px,py,pz)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallMat);m.position.set(px,py,pz);m.castShadow=true;m.receiveShadow=true;g.add(m)};
+ // بيت أكبر بجدران حقيقية وأبواب ونوافذ، مع فتحة مدخل واضحة.
+ addWall(7.2,3.5,.28,0,1.75,-3);addWall(.28,3.5,6, -3.6,1.75,0);addWall(.28,3.5,6,3.6,1.75,0);
+ addWall(2.55,3.5,.28,-2.325,1.75,3);addWall(2.55,3.5,.28,2.325,1.75,3);
+ const lintel=new THREE.Mesh(new THREE.BoxGeometry(2.1,.45,.3),wallMat);lintel.position.set(0,3.28,3);g.add(lintel);
+ const roof=new THREE.Mesh(new THREE.ConeGeometry(5.25,2.9,4),roofMat);roof.position.y=4.65;roof.rotation.y=Math.PI/4;roof.scale.z=.84;roof.castShadow=true;g.add(roof);
+ const door=new THREE.Mesh(new THREE.BoxGeometry(1.75,2.5,.16),doorMat);door.position.set(0,1.25,3.05);g.add(door);
+ for(const side of [-1,1]){const win=new THREE.Mesh(new THREE.BoxGeometry(.78,.82,.09),windowMat);win.position.set(side*2.25,2,3.17);g.add(win);const cross=new THREE.Mesh(new THREE.BoxGeometry(.08,.9,.1),doorMat);cross.position.copy(win.position);g.add(cross)}
+ const porch=new THREE.Mesh(new THREE.BoxGeometry(2.8,.18,1.1),mat(0x80603d));porch.position.set(0,.12,3.5);g.add(porch);
+ g.position.set(x,height(x,z),z);g.scale.setScalar(s);scene.add(g);
+ const t=3.6*s,d=3*s,r=.46;
+ addCollider(x,z-3*s,3.6*s,.14*s,r);addCollider(x-3.6*s,z,.14*s,3*s,r);addCollider(x+3.6*s,z,.14*s,3*s,r);
+ addCollider(x-2.325*s,z+3*s,1.275*s,.14*s,r);addCollider(x+2.325*s,z+3*s,1.275*s,.14*s,r);
+ return g
+}
+function rock(x,z,s){const o=new THREE.Mesh(new THREE.DodecahedronGeometry(1,1),mat(0x77786b));o.position.set(x,height(x,z)+s*.4,z);o.scale.set(s*1.2,s*.7,s);o.rotation.set(Math.random(),Math.random(),Math.random());o.castShadow=true;scene.add(o);addCollider(x,z,s*1.15,s*.95,.28)}
 // distant mountain wall
 for(let i=0;i<64;i++){const a=i/64*Math.PI*2,r=735+Math.random()*80,x=Math.cos(a)*r,z=Math.sin(a)*r;const m=new THREE.Mesh(new THREE.ConeGeometry(9+Math.random()*10,18+Math.random()*24,5),mat(0x53645a));m.position.set(x,8+height(x,z),z);m.rotation.y=Math.random()*6;m.castShadow=true;scene.add(m)}
 const treeCount=1250,treeDummy=new THREE.Object3D(),treeTrunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.16,.28,2.4,7),mat(0x59402b),treeCount),treeCrownA=new THREE.InstancedMesh(new THREE.ConeGeometry(1.25,3.2,7),mat(0x294b34),treeCount),treeCrownB=new THREE.InstancedMesh(new THREE.ConeGeometry(1.09,3.2,7),mat(0x355d3c),treeCount),treeCrownC=new THREE.InstancedMesh(new THREE.ConeGeometry(.93,3.2,7),mat(0x355d3c),treeCount);
 for(const batch of [treeTrunk,treeCrownA,treeCrownB,treeCrownC]){batch.castShadow=true;batch.receiveShadow=true;scene.add(batch)}
 let placedTrees=0;
 for(let i=0;i<treeCount;i++){const a=Math.random()*Math.PI*2,r=35+Math.random()*690,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.abs(x+55)<16)continue;const scale=.55+Math.random()*.8,y=height(x,z);
- treeDummy.position.set(x,y+1.2*scale,z);treeDummy.scale.setScalar(scale);treeDummy.updateMatrix();treeTrunk.setMatrixAt(placedTrees,treeDummy.matrix);
+ treeDummy.position.set(x,y+1.2*scale,z);treeDummy.scale.setScalar(scale);addCollider(x,z,.42*scale,.42*scale,.28);treeDummy.updateMatrix();treeTrunk.setMatrixAt(placedTrees,treeDummy.matrix);
  for(const [batch,offset] of [[treeCrownA,2.6],[treeCrownB,3.25],[treeCrownC,3.9]]){treeDummy.position.set(x,y+offset*scale,z);treeDummy.updateMatrix();batch.setMatrixAt(placedTrees,treeDummy.matrix)}
  placedTrees++;
 }
@@ -182,8 +224,8 @@ function updateSurvival(dt,hour){
 if(!entered)return;survivalTick+=dt;weatherTick+=dt;
 if(survivalTick>18){survivalTick=0;game.hunger=Math.max(0,game.hunger-.8);game.thirst=Math.max(0,game.thirst-1.2);game.stamina=Math.min(100,game.stamina+2);if(game.hunger===0||game.thirst===0)game.health=Math.max(1,game.health-2);$('#health-bar').style.width=game.health+'%';$('#stamina-bar').style.width=game.stamina+'%';$('#hunger-bar').style.width=game.hunger+'%';$('#thirst-bar').style.width=game.thirst+'%';saveGame()}
 if(weatherTick>85){weatherTick=0;const weathers=['صحو','ضباب','مطر خفيف','عاصفة'];const w=weathers[Math.floor(Math.random()*weathers.length)];$('#weather-label').textContent=w;toast('تغير الطقس: '+w)}
-for(const v of villagers){const oldX=v.mesh.position.x,oldZ=v.mesh.position.z;v.mesh.position.x=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3;v.mesh.position.z=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z);const moving=Math.hypot(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)>.001;const step=Math.sin(elapsed*3.8+v.phase)*(moving?.28:.035);v.armPivots[0].rotation.x=step;v.armPivots[1].rotation.x=-step;v.legPivots[0].rotation.x=-step*.8;v.legPivots[1].rotation.x=step*.8;v.mesh.rotation.y=Math.atan2(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)}
-for(const a of wildlife){const dx=a.mesh.position.x-target.x,dz=a.mesh.position.z-target.z,dist=Math.hypot(dx,dz);let vx=0,vz=0;if(entered&&dist<10){a.flee=Math.max(a.flee,2.8);vx=dx/(dist||1);vz=dz/(dist||1)}else{const wander=Math.sin(elapsed*a.speed+a.phase);vx=Math.cos(elapsed*a.speed*.7+a.phase)*.42;vz=Math.sin(elapsed*a.speed+a.phase)*.32;a.flee=Math.max(0,a.flee-dt)}const pace=a.flee>0?5.2:1.1;a.mesh.position.x+=vx*pace*dt;a.mesh.position.z+=vz*pace*dt;if(a.flee<=0){a.mesh.position.x+=(a.homeX-a.mesh.position.x)*dt*.12;a.mesh.position.z+=(a.homeZ-a.mesh.position.z)*dt*.12}a.mesh.position.x=THREE.MathUtils.clamp(a.mesh.position.x,-790,790);a.mesh.position.z=THREE.MathUtils.clamp(a.mesh.position.z,-790,790);a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);if(Math.abs(vx)+Math.abs(vz)>.05)a.mesh.rotation.y=Math.atan2(vx,vz);a.head.rotation.x=a.flee>0?-.12:Math.sin(elapsed*1.4+a.phase)*.08;a.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(elapsed*(a.flee>0?11:4)+a.phase+(i%2)*Math.PI)* (a.flee>0?.72:.18)});}
+for(const v of villagers){const oldX=v.mesh.position.x,oldZ=v.mesh.position.z;const nx=v.homeX+Math.sin(elapsed*.22+v.phase)*1.3,nz=v.homeZ+Math.cos(elapsed*.18+v.phase)*1.3;moveWithCollision(v.mesh,nx-oldX,nz-oldZ,.48);v.mesh.position.y=height(v.mesh.position.x,v.mesh.position.z);const moving=Math.hypot(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)>.001;const step=Math.sin(elapsed*3.8+v.phase)*(moving?.28:.035);v.armPivots[0].rotation.x=step;v.armPivots[1].rotation.x=-step;v.legPivots[0].rotation.x=-step*.8;v.legPivots[1].rotation.x=step*.8;v.mesh.rotation.y=Math.atan2(v.mesh.position.x-oldX,v.mesh.position.z-oldZ)}
+for(const a of wildlife){const dx=a.mesh.position.x-target.x,dz=a.mesh.position.z-target.z,dist=Math.hypot(dx,dz);let vx=0,vz=0;if(entered&&dist<10){a.flee=Math.max(a.flee,2.8);vx=dx/(dist||1);vz=dz/(dist||1)}else{const wander=Math.sin(elapsed*a.speed+a.phase);vx=Math.cos(elapsed*a.speed*.7+a.phase)*.42;vz=Math.sin(elapsed*a.speed+a.phase)*.32;a.flee=Math.max(0,a.flee-dt)}const pace=a.flee>0?5.2:1.1;const ax=vx*pace*dt+(a.flee<=0?(a.homeX-a.mesh.position.x)*dt*.12:0),az=vz*pace*dt+(a.flee<=0?(a.homeZ-a.mesh.position.z)*dt*.12:0);moveWithCollision(a.mesh,ax,az,a.kind==='غزال'?.55:.3);a.mesh.position.x=THREE.MathUtils.clamp(a.mesh.position.x,-790,790);a.mesh.position.z=THREE.MathUtils.clamp(a.mesh.position.z,-790,790);a.mesh.position.y=height(a.mesh.position.x,a.mesh.position.z);if(Math.abs(vx)+Math.abs(vz)>.05)a.mesh.rotation.y=Math.atan2(vx,vz);a.head.rotation.x=a.flee>0?-.12:Math.sin(elapsed*1.4+a.phase)*.08;a.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(elapsed*(a.flee>0?11:4)+a.phase+(i%2)*Math.PI)* (a.flee>0?.72:.18)});}
 }
 
 addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key.toLowerCase()==='f')interact()});
@@ -249,7 +291,7 @@ function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-(ani
 const hour=Math.floor(clockMinutes/60),minute=Math.floor(clockMinutes%60);$('#world-clock').textContent='اليوم '+String(day+1).padStart(2,'0')+' · '+String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
 updateSurvival(dt,hour);const night=hour<6||hour>19;const daylight=THREE.MathUtils.clamp((Math.sin((hour-6)/13*Math.PI)+.12),.12,1);sun.intensity=.35+daylight*2.5;scene.fog.color.set(night?0x17232a:0x9bb6b0);scene.background.copy(scene.fog.color);scene.fog.density=night?.014:.009;renderer.toneMappingExposure=night?.72:1.12;
 const fwd=(keys.has('w')||keys.has('arrowup')||move.has('forward')?1:0)-(keys.has('s')||keys.has('arrowdown')||move.has('back')?1:0),side=(keys.has('d')||keys.has('arrowright')||move.has('right')?1:0)-(keys.has('a')||keys.has('arrowleft')||move.has('left')?1:0),moving=!!(fwd||side),sprinting=keys.has('shift')||move.has('sprint');
-if(entered&&moving){const speed=sprinting&&game.stamina>2?10.5:5.8;const norm=1/Math.max(1,Math.hypot(fwd,side));target.x+=(Math.sin(yaw)*fwd+Math.cos(yaw)*side)*speed*dt*norm;target.z+=(Math.cos(yaw)*fwd-Math.sin(yaw)*side)*speed*dt*norm;target.x=THREE.MathUtils.clamp(target.x,-780,780);target.z=THREE.MathUtils.clamp(target.z,-780,780);player.rotation.y=Math.atan2(Math.sin(yaw)*fwd+Math.cos(yaw)*side,Math.cos(yaw)*fwd-Math.sin(yaw)*side);game.stamina=Math.max(0,game.stamina-(sprinting?dt*8:dt*.45));}
+if(entered&&moving){const speed=sprinting&&game.stamina>2?10.5:5.8;const norm=1/Math.max(1,Math.hypot(fwd,side));const dx=(Math.sin(yaw)*fwd+Math.cos(yaw)*side)*speed*dt*norm,dz=(Math.cos(yaw)*fwd-Math.sin(yaw)*side)*speed*dt*norm;moveWithCollision(player,dx,dz,.58);target.x=THREE.MathUtils.clamp(player.position.x,-780,780);target.z=THREE.MathUtils.clamp(player.position.z,-780,780);player.rotation.y=Math.atan2(Math.sin(yaw)*fwd+Math.cos(yaw)*side,Math.cos(yaw)*fwd-Math.sin(yaw)*side);game.stamina=Math.max(0,game.stamina-(sprinting?dt*8:dt*.45));}
 walkingBlend=THREE.MathUtils.lerp(walkingBlend,moving?1:0,Math.min(1,dt*9));const swing=Math.sin(elapsed*(sprinting?13:8))*walkingBlend;armPivots[0].rotation.x=swing*.72;armPivots[1].rotation.x=-swing*.72;legPivots[0].rotation.x=-swing*.68;legPivots[1].rotation.x=swing*.68;torso.position.y=1.05+Math.abs(swing)*.035;player.position.x=target.x;player.position.z=target.z;const floor=height(target.x,target.z);if(jumpVelocity||player.position.y>floor+.02){jumpVelocity-=16*dt;player.position.y+=jumpVelocity*dt;if(player.position.y<floor){player.position.y=floor;jumpVelocity=0}}else player.position.y=floor;target.y=player.position.y;
 if(entered&&!moving&&game.stamina<100)game.stamina=Math.min(100,game.stamina+dt*4);
 const camDist=entered?distance:distance;cameraGoal.set(target.x+Math.sin(yaw)*Math.cos(pitch)*camDist,target.y+Math.sin(pitch)*camDist+4,target.z+Math.cos(yaw)*Math.cos(pitch)*camDist);camera.position.lerp(cameraGoal,Math.min(1,dt*5.5));camera.lookAt(target.x,target.y+1.15,target.z);
